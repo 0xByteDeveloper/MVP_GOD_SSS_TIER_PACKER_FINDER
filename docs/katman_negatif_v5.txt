@@ -1,0 +1,42 @@
+=== CIFIT KATMAN (Ultimate 3.9.4 ic + Ultimate 3.4.0 dis) ===
+TARGET: demolar/katman_cift.exe
+Arch: x64 | Family: T64E
+VMProtect: DETECTED (.vmp bolum(leri))
+Katman: COKLU (cift .vmp bolumu)
+  katman-bolum .vmp0(1536 B) -> surum: Ultimate 3.9.4 (cipa (tek-bolum boyut imzasi))
+  katman-bolum .vmp0(2048 B) -> surum: Ultimate 3.4.0 (cipa (tek-bolum boyut imzasi))
+Karar katmani: L: cift .vmp bolumu — katman katman surum atfi
+FEATURE AnalizModu              : COKLU KATMAN — ozellik cikimi katman bazinda guvenilmez
+FEATURE Pack                    : KAPALI/yok
+FEATURE StripFixups             : KAPALI/yok
+FEATURE ImportProtection        : YOK
+
+OZET: 1 hedef | 1 VMProtect | 0 NEGATIF (VMP degil) | 0 esitlik sinifi (fn0 3.8.x) | 1 cok katmanli
+
+=== NEGATIF: gercek UPX ===
+TARGET: /home/z/my-project/work/repo/ornekler/gercek_UPX.exe
+Arch: x64 | Family: T64E
+VMProtect: HAYIR (NEGATIF KARAR)
+Packer: UPX (bolum tablosu sikistirilmis)
+Kanit: UPX! sihri
+
+=== NEGATIF: Themida izi (sentetik) ===
+TARGET: /home/z/my-project/work/repo/ornekler/themida_izi_sentetik.exe
+Arch: x64 | Family: T64E
+VMProtect: HAYIR (NEGATIF KARAR)
+Packer: Themida / WinLicense
+Kanit: Themida ailesi izleri
+
+=== NEGATIF: korumasiz Test_32.dll ===
+TARGET: /home/z/my-project/upload/orijinal/Test_32.dll
+Arch: x86 | Family: T32D
+VMProtect: HAYIR (NEGATIF KARAR)
+Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil
+
+
+=== NEGATIF: korumasiz Test_64.exe ===
+TARGET: /home/z/my-project/upload/orijinal/Test_64.exe
+Arch: x64 | Family: T64E
+VMProtect: HAYIR (NEGATIF KARAR)
+Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil
+

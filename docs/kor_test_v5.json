@@ -1,0 +1,33 @@
+{
+ "toplam": 310,
+ "top1_kesin": 306,
+ "top1_esitlik": 4,
+ "aday_set": 310,
+ "aile_bazli": {
+  "T32E": {
+   "toplam": 78,
+   "top1": 77,
+   "aday_set": 78,
+   "top1_esitlik": 1
+  },
+  "T32D": {
+   "toplam": 78,
+   "top1": 77,
+   "aday_set": 78,
+   "top1_esitlik": 1
+  },
+  "T64E": {
+   "toplam": 77,
+   "top1": 76,
+   "aday_set": 77,
+   "top1_esitlik": 1
+  },
+  "T64D": {
+   "toplam": 77,
+   "top1": 76,
+   "aday_set": 77,
+   "top1_esitlik": 1
+  }
+ },
+ "hata_sayisi": 0
+}

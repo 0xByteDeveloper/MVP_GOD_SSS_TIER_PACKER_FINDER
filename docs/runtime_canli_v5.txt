@@ -1,0 +1,38 @@
+=== --live: 64-bit EXE (Lite 3.8.7 T64E_fn0, wine) ===
+  hedef bulundu: pid=18492 taban=0x140000000 boy=0x8000
+[dbg] bekleniyor 2000 ms
+[dbg] mem aciliyor
+[dbg] img boyutu 32768
+[dbg] okundu 32768
+[dbg] geri kazan bitti
+  [32m[DUMP OK][0m 32768 bayt → /tmp/live_t64e.bin
+
+=== --live: 64-bit DLL, gomulu host (Ultimate 3.9.4 T64D_Move_Ultra, wine) ===
+  hedef bulundu: pid=18913 taban=0x6FFFFAEB0000 boy=0x274000
+  [32m[DUMP OK][0m 2572288 bayt → /tmp/live_dll64.bin
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [32mVMProtect tespit edildi[0m (.vmp bolum(leri))
+  surum (dump): Ultimate 3.9.4 (guven: YUKSEK (aile cipasi birebir))
+  bolumler (dump): .vmp0(2543104 B) 
+EXIT=0
+
+=== --live: 32-bit EXE (Ultimate 3.9.4 T32E_fn0, wine32) ===
+  hedef bulundu: pid=22663 taban=0x400000 boy=0x8000
+  [32m[DUMP OK][0m 32768 bayt → /tmp/live_t32b.bin
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [32mVMProtect tespit edildi[0m (.vmp bolum(leri))
+  surum (dump): Ultimate 3.9.4 (guven: YUKSEK (aile cipasi birebir))
+  bolumler (dump): .vmp0(1024 B) 
+EXIT=0
+
+=== --live: 32-bit DLL, gomulu x86 host (Lite 3.8.7 T32D_fn0, wine32) ===
+  hedef bulundu: pid=22855 taban=0x7F980000 boy=0x8000
+  [32m[DUMP OK][0m 32768 bayt → /tmp/live_t32d.bin
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [32mVMProtect tespit edildi[0m (.vmp bolum(leri))
+  surum (dump): Lite 3.8.7 (guven: YUKSEK (aile cipasi birebir))
+  bolumler (dump): .vmp0(1536 B) 
+EXIT=0

@@ -265,8 +265,10 @@ class Surucu:
         if self.a.sadece:
             sec = set(self.a.sadece.split(","))
             builds = [b for b in builds if b["ad"] in sec]
-        kalan = [b for b in builds if not (self.sonuclar.get(b["ad"], {}).get("durum") == "OK" and
-                 os.path.exists(b["cikti"]) and os.path.getsize(b["cikti"]) > 0)]
+        kalan = [b for b in builds if not (
+            self.sonuclar.get(b["ad"], {}).get("durum") == "ATLANDI" or
+            (self.sonuclar.get(b["ad"], {}).get("durum") == "OK" and
+             os.path.exists(b["cikti"]) and os.path.getsize(b["cikti"]) > 0))]
         self.log(f"{self.surum}: {len(builds)} build, {len(kalan)} kalan")
         if not kalan:
             self.log("tümü tamam")

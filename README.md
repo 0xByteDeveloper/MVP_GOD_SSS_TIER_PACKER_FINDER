@@ -1,7 +1,7 @@
-# MVP GOD SSS TIER — VMProtect Packer Finder (v4)
+# MVP GOD SSS TIER — VMProtect Packer Finder (v5)
 
 **Deterministik VMProtect sürüm + özellik + katman dedektörü. Makine öğrenmesi YOK.**
-Tek dosyalık bağımlılıksız C++17 — Windows + Linux.
+Tek dosyalık bağımlılıksız C++17 — Windows + Linux — **EXE ve DLL, 32-bit ve 64-bit**.
 
 ```
  ██╗   ██╗███╗   ███╗██╗     ███████╗████████╗ ██████╗ ███████╗ ██████╗ ███████╗
@@ -11,6 +11,72 @@ Tek dosyalık bağımlılıksız C++17 — Windows + Linux.
   ╚████╔╝ ██║ ╚═╝ ██║███████╗███████║   ██║   ╚██████╔╝██║     ╚██████╔╝███████║
    ╚═══╝  ╚═╝     ╚═╝╚══════╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝
 ```
+
+## v5 — DÖRT AİLEDE %100 (32/64-bit EXE + DLL)
+
+v4 yalnız 64-bit EXE'de kusursuzdu. v5, kullanıcının **GERÇEK** Test dosyalarıyla
+(`orijinal.rar`: Test_32.exe, Test_32.dll, Test_64.exe, Test_64.dll) sıfırdan
+kurulmuş **dört-aile korpusu** ile hepsinde kusursuzdur:
+
+| Aile | Korpus | Kör test (adlar rastgele gizli) |
+|---|---|---|
+| 32-bit EXE (T32E) | 78 build × 10 sürüm | **%100 TOP-1 + aday-set** |
+| 32-bit DLL (T32D) | 78 build × 10 sürüm | **%100 TOP-1 + aday-set** |
+| 64-bit EXE (T64E) | 77 build × 10 sürüm | **%100 TOP-1 + aday-set** |
+| 64-bit DLL (T64D) | 77 build × 10 sürüm | **%100 TOP-1 + aday-set** |
+| **TOPLAM** | **310 build** | **%100 (306 kesin + 4 fn0-eşitliği), profil 310/310** |
+
+### Mimari: aile kapısı + cipa sistemi
+`makine (i386/AMD64) + DLL bayrağı` → aile kapısı → **K2 aile cipası**
+((aile, sürüm, build-tipi) → bölüm boyutları, 310 profil, birebir) →
+K4' göreli-marjlı profil mesafesi → OZEL VARYANT (modlanmış motor) uyarısı.
+
+### Eşitlik sınıfı rafinasyonu (v5 bulgusu)
+`Professional 3.8.1 ∥ Ultimate 3.8.4` bayt-özdeşliği **YALNIZ fn0**
+(seçeneksiz saf-wrapper) yapısında geçerli — Pack/Move_Ultra yapılarında
+iki sürüm **AYRIŞIR** (cipa kanıtıyla). Seçenek ya da fonksiyon koruması
+varsa sürüm kesin verilir.
+
+### DLL runtime analizi — gömülü host
+`--live` DLL hedeflerinde **binary içine gömülü** LoadLibrary+Sleep host'unu
+(x64+x86) yazar ve çalıştırır: DLL bellekte açılır, dökülür, otomatik yeniden
+analiz edilir — sürüm atfı dahil. Linux'ta 32-bit hedefler mimari-koklayan
+`wine_run.sh` üzerinden wine32 kit'ine yönlenir. Dört ailede de kanıtlandı
+(`docs/runtime_canli_v5.txt`).
+
+### Çok katman (yeni ailelerle kanıtlı)
+3.9.4-iç + 3.4.0-dış çift koruması: her katman bölüm-bazlı atfedildi
+(`docs/katman_negatif_v5.txt`).
+
+### Dürüst sınırlar (belgelendi)
+- Lite 3.10.4 + HEPSI kombinasyonu: motor takılıyor (Lite kusuru) — 8 build korpus dışı.
+- Ult 3.6.0 belirli kombinasyonlarda BOZUK çıktı (bölüm tablosu sıfır) — 2 build, 2x kanıt.
+- Ult 3.3.1 (yalnız i386 GUI): qemu-emüle wine altında çöker — VMP tespiti çalışır,
+  sürüm atfı OZEL VARYANT olarak raporlanır; gerçek Windows'ta `scripts/` hattıyla DB genişletilebilir.
+
+## Kullanım
+
+```bash
+./vmpdet5 hedef.exe                 # askeri TUI raporu (exe VEYA dll, 32/64-bit)
+./vmpdet5 --dir korumali_klasor/    # toplu tarama (.exe + .dll) + özet
+./vmpdet5 --json cikti.json --dir kl/
+./vmpdet5 --sim hedef.dll           # loader emülasyonu (kod ÇALIŞMAZ, export dahil)
+./vmpdet5 --live hedef.dll          # canlı süreç + bellek dump + yeniden analiz
+                                    # (DLL: gömülü host otomatik)
+```
+
+Ayrıntılı doküman: **[docs/BENIOKU_v5.md](docs/BENIOKU_v5.md)**
+
+## Derleme
+
+```bash
+g++ -O2 -std=c++17 -o vmpdet5 src/vmpdet5.cpp
+x86_64-w64-mingw32-g++ -O2 -std=c++17 -static -o vmpdet5.exe src/vmpdet5.cpp -lpsapi
+```
+
+---
+
+# v4 ARŞİVİ (önceki sürüm)
 
 ## Sonuçlar
 
