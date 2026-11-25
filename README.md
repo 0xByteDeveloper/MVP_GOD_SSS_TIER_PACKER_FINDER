@@ -1,7 +1,44 @@
-# MVP GOD SSS TIER — VMProtect Packer Finder (v6)
+# MVP GOD SSS TIER — VMProtect Packer Finder (v7 IMMORTAL)
 
 **Deterministik VMProtect sürüm + özellik + katman dedektörü + EVRENSEL packer motoru. Makine öğrenmesi YOK.**
 Tek dosyalık bağımlılıksız C++17 — Windows + Linux — **EXE ve DLL, 32-bit ve 64-bit**.
+
+## v7 — IMMORTAL: 4.500+ imza, HER PACKER'I ADIYLA SÖYLER
+
+v6'nın kaynak-koddan beslenen hattı üç büyük miras sözlükle birleşti:
+
+| Kaynak | Katkı |
+|---|---|
+| **PEiD userDB** (topluluk sözlüğü, DIE paketi) | 2768 EP imzası + 382 tam-tarama imzası — **sürüm düzeyinde** ("ASPack 2.12") |
+| **Detect It Easy** kuralları (horsicq, MIT) | 1287 modern EP imzası + 42 bölüm-içeriği + 90 bölüm-adı |
+| **de4dot** (0xd4d, GPL) | 24 .NET obfuscator dedektör bilgisi (ConfuserEx/Babel/Agile.NET/Reactor...) |
+| **Themida RE araçları** (unthemidator, Magicmida, themida-devirt, Themidie) | Themida sürüm haritası (EP desenleri 1.0→2.1) + **x64→3.x kuralı** (K1: Magicmida Themida64.pas:63) |
+
+Yeni motor katmanları (`src/universal_tara.h` v7):
+- **EP İMZA MOTORU** — 4055 desen giriş noktasında eşleşir (nibble-joker destekli);
+  en-kesin desen kazanır; PEiD adları sürüm taşır
+- **.NET CLI METADATA MOTORU** — CLI başlık → BSJB kökü → stream dizini → #Strings
+  yığını: ConfuserEx (sürüm su damgasıyla: "ConfuserEx 9.9.9"), KoiVM, .NET Reactor,
+  Agile.NET, Babel ("Babel" stream'i), Dotfuscator, SmartAssembly, DNGuard,
+  ILProtector, Xenocode... 25 tip işareti
+- **THEMIDA DERİN BLOĞU** — 8 EP sürüm deseni + .NET stub'ları + x64→3.x+ kuralı
+- **ÖZ-REFERANS KALKANI** — tam-dosya imzaları binary'de XOR-karıştırılmış gömülür;
+  dedektör kendi binary'sini artık yanlış SAYMAZ (v6'da kapanmış kusur)
+- **VMP KAPISI ERTELEMESİ** — EP imzası aile bulsa bile koruyucu bölümlü dosyalarda
+  önce VMProtect derin motoru karar verir (bölüm adları değiştirilmiş VMP vakası)
+
+Regresyon: **310/310 VMP kör korpusu %100** + 33 örnek + temiz PE'ler + öz-tarama:
+**0 hata, 0 yanlış pozitif**. Detaylı kanıt tablosu: **[docs/KaynakKodAnalizi.md](docs/KaynakKodAnalizi.md)** (v7 bölümü).
+Kullanım: `vmpdet7 --evren <dosya>` (tüm kanıt listesi: EP adayları, .NET raporu, Themida sürümü) · `--json`.
+
+```
+ ██╗   ██╗███╗   ███╗██╗     ███████╗████████╗ ██████╗ ███████╗ ██████╗ ███████╗
+ ██║   ██║████╗ ████║██║     ██╔════╝╚══██╔══╝██╔═══██╗██╔════╝██╔═══██╗██╔════╝
+ ██║   ██║██╔████╔██║██║     █████╗     ██║   ██║   ██║█████╗  ██║   ██║███████╗
+ ╚██╗ ██╔╝██║╚██╔╝██║██║     ╚════██║    ██║   ██║   ██║██╔══╝  ██║   ██║╚════██║
+  ╚████╔╝ ██║ ╚═╝ ██║███████╗███████║    ██║   ╚██████╔╝██║     ╚██████╔╝███████║
+   ╚═══╝  ╚═╝     ╚═╝╚══════╝╚══════╝    ╚═╝    ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝
+```
 
 ## v6 — EVRENSEL MOTOR: kaynak koddan beslenen imza veritabanı
 
@@ -67,6 +104,9 @@ analiz edilir — sürüm atfı dahil. Linux'ta 32-bit hedefler mimari-koklayan
 ## Kullanım
 
 ```bash
+./vmpdet7 hedef.exe                 # askeri TUI raporu (exe VEYA dll, 32/64-bit)
+./vmpdet7 --evren hedef.exe         # + TÜM evrensel kanıt listesi (EP adayları, .NET, Themida)
+./vmpdet7 --json c.json --dir kl/   # toplu JSON (evren/ep_imzasi/net/themida alanları dahil)
 ./vmpdet5 hedef.exe                 # askeri TUI raporu (exe VEYA dll, 32/64-bit)
 ./vmpdet5 --dir korumali_klasor/    # toplu tarama (.exe + .dll) + özet
 ./vmpdet5 --json cikti.json --dir kl/
@@ -80,8 +120,13 @@ Ayrıntılı doküman: **[docs/BENIOKU_v5.md](docs/BENIOKU_v5.md)**
 ## Derleme
 
 ```bash
-g++ -O2 -std=c++17 -o vmpdet5 src/vmpdet5.cpp
-x86_64-w64-mingw32-g++ -O2 -std=c++17 -static -o vmpdet5.exe src/vmpdet5.cpp -lpsapi
+# Linux
+g++ -O2 -std=c++17 -o vmpdet7 src/vmpdet5.cpp
+# Windows (MinGW-w64 YA DA zig cc çapraz derleme)
+x86_64-w64-mingw32-g++ -O2 -std=c++17 -static -o vmpdet7.exe src/vmpdet5.cpp -lpsapi
+zig c++ -O2 -std=c++17 -target x86_64-windows-gnu -o vmpdet7.exe src/vmpdet5.cpp -lpsapi
+# İmza tablolarını yeniden üretmek için (PEiD userDB + DIE .sg → C++):
+python3 scripts/v7_uret.py      # src/peid_db.h + src/die_db.h (OTOMATİK ÜRETİM)
 ```
 
 ---

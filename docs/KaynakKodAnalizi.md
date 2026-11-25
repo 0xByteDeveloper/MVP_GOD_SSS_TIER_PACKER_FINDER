@@ -231,3 +231,151 @@ scripts/sahte_imza_test.py — 7 senaryolu aile testi
 scripts/kor_test_v6.py  — 310 kör regresyon
 scripts/upx_iznik_cikar.py — UPX gerçek çıktı çözümleyici
 ```
+
+---
+
+# v7 EK BÖLÜMÜ — IMMORTAL: PEiD + DIE + de4dot + Themida-RE BESLEMESİ (26.11.2026)
+
+> **v7, v6'nın "kaynak koddan besleme" hattını İNANILMAZ ölçeğe taşır:**
+> klasik PEiD imza sözlüğü (topluluk mirası, Detect-It-Easy paketi) + Detect-It-Easy'in
+> modern imza kuralları (MIT, horsicq) + de4dot .NET obfuscator dedektörü (GPL, 0xd4d) +
+> Themida tersine-mühendislik araçları (unthemidator / Magicmida / themida-devirt / Themidie)
+> — hepsi TEK deterministik motuna işlendi. Makine öğrenmesi YOK.
+
+## v7.0) Bu turda klonlanıp analiz edilen 19 yeni kaynak deposu
+
+| Depo | Alan | Motora katkı |
+|---|---|---|
+| horsicq/Detect-It-Easy | imza DB'si (MIT) | 1287 EP imzası + 42 bölüm-içeriği + 90 bölüm-adı kuralı (`db/PE/*.sg`) + PEiD userDB paketi (`peid_rules/PE/`, 3776 kayıt) |
+| de4dot/de4dot | .NET deobfuscator (GPL) | 24 obfuscator'un dedektör mantığı: ConfuserEx (Confuser/Deobfuscator.cs:505), Babel metadata stream'i (Babel_NET/Deobfuscator.cs:125 HasMetadataStream("Babel")), Agile.NET CliSecureRt tipi, Eazfuscator sürüm dedektörü |
+| x86rc/unthemidator | Themida 3-4 unpacker | Themida VM yapısı bilgisi (vm_enter/trampoline/dispatch — c_themida_unpacker.cpp) |
+| Hendi48/Magicmida | Themida unpacker (766★) | **x64→V3 kuralı (Themida64.pas:63 "Themida V2 is not supported on x64")** + V1/V3 davranış ayrımı + magic-jump desenleri (Themida.pas:722 '3B8D????????0F84????0000') |
+| aftermathlabs/themida-devirt | Themida devirt | VM handler yapısı doğrulaması |
+| VenTaz/Themidie | Themida 3.x anti-debug bypass | Themida 3.x koruma yüzeyi bilgisi |
+| mkaring/ConfuserEx | ConfuserEx (aktif fork) | ConfusedByAttribute + Confuser.Core sürüm su damgası |
+| yck1509/KoiVM | KoiVM | "KoiVM"/"VMEntryRun" tip adları |
+| Washi1337/OldRod | KoiVM devirt (389★) | KoiVM bytecode yapısı doğrulaması |
+| SychicBoy/NETReactorSlayer | .NET Reactor (1286★) | NecroVM.Runtime / $method0x / "is tampered." imzaları |
+| holly-hacker/EazFixer | Eazfuscator (459★) | Eazfuscator yapısı |
+| SychicBoy/AgileDotNetSlayer | Agile.NET devirt | CliSecure yapısı |
+| dr4k0nia/Origami | .NET packer | .NET packer çıktı yapısı |
+| fl2on/Anti-De4dot | anti-araç | anti-de4dot tespit bilgisi |
+| Lil-House/Pyarmor-Static-Unpack-1shot | PyArmor 8-9.3 (709★) | PyArmor sürüm bilgisi |
+| jz0/tvm-devirt | Tencent VM devirt | **.tvm0 bölüm imzası (README: "devirtualized code appended at .tvm0")** |
+| Momoko-Ayase/Senbei | CrackProof unpacker (94★) | CrackProof hedef ailesi (DIE kuralıyla çapraz) |
+| orca-zhang/unpack | otomatik unpack (Rust) | ASPack test verisi (testdata/aspack/aspack_test.exe) |
+| guoxing2024/magicmida-rs | Magicmida Rust portu | çapraz doğrulama |
+
+## v7.1) Motor mimarisi — 8 katman (universal_tara.h v7)
+
+```
+S0  .NET CLI METADATA MOTORU (YENİ)
+    veri_dizin[14] → CLI header → BSJB metadata kökü → stream dizini
+    → #Strings yığını taraması (25 tip-adı işareti: ConfusedByAttribute, KoiVM,
+      NecroVM.Runtime, ObfuscatedByCliSecureAttribute, BabelAttribute, ...)
+    → sürüm su damgaları ("ConfuserEx v", "Confuser.Core ", "Confuser v" —
+      sürüm sayıları çözülür: "ConfuserEx (.NET) 9.9.9" gibi)
+    → standart-dışı metadata stream'leri ("Babel" → Babel ailesi, K1 de4dot)
+    → UTF-16 "is tampered." (.NET Reactor anti-tamper)
+S1  bölüm-adı aile eşleşmesi (v6'dan; 56 aile) + DIE bölüm-adı DESTEK kanıtı
+    (genel adlar — .text/.data/.rsrc — elenir; aile kararı üretmez)
+S2  sahte-imza demeti kalkanı (obfus.h FAKE_SIGNATURES) — v6'dan
+S3  bölge-kısıtlı dizgi imzaları (v6'dan) + KARISTIRILMIŞ tam-dosya imzaları
+S4  GİRİŞ NOKTASI İMZA MOTORU (YENİ): PEiD 2768 + DIE 1287 = 4055 desen,
+    nibble-joker destekli, EP ofsetinde sabitlenmiş; en-kesin-desen kazanır;
+    PEiD adları SÜRÜM TAŞIR ("ASPack v1.08" → aile=ASPack sürüm=1.08)
+S5  tam-tarama imzaları (PEiD 382) — YALNIZ EP-bölümü + koruyucu bölümlerin
+    ilk 256KB / son 64KB parçaları (yanlış-pozitif + performans koruması)
+S6  özel bloklar: TinyLoad XXTEA (karıştırılmış), UPX packheader, PyInstaller cookie
+S7  THEMİDA DERİN BLOĞU (YENİ): 8 EP deseni → sürüm haritası (1.0.X-2.1.8.0),
+    .NET stub'ları (1.9 / 2.X), x64→3.x+ kuralı (K1: Magicmida Themida64.pas:63)
+S8  NİHAİ KARAR — öncelik: sahte-demet > bölüm-ailesi > .NET > EP(≥6 kesin bayt) > dizgi
+    + VMP KAPISI ERTELEMESİ: EP imzasından gelen aile + koruyucu bölüm varsa
+    önce VMProtect derin motoru karar verir (kanıtlı vaka: vmp_340_adlar_degisti
+    dosyasında DIE 'ROPacker' EP deseni VMP stub'ına çarpıyordu → v7'de VMP kazanır)
+```
+
+## v7.2) İmza hacmi
+
+| Kaynak | İmza | Adet |
+|---|---|---|
+| PEiD userDB (packer 992 + protector 1784 + protection 943 + joiner 57) | EP imzası (kalite filtreli) | **2768** |
+| PEiD userDB | tam-tarama (≥12 kesin bayt) | 382 |
+| DIE db/PE (553 kural dosyası) | EP imzası | **1287** |
+| DIE | bölüm-içeriği | 42 |
+| DIE | bölüm-adı kanıtı | 90 |
+| universal_db.h v6 | bölüm-adı ailesi | 56 |
+| de4dot + DIE .NET | #Strings tip işareti | 25 |
+| Themida derin blok | EP sürüm deseni | 8 |
+| obfus.h/UPX/PyInstaller/TinyLoad/CrackProof | özel yapısal | 6+ |
+| **TOPLAM bayt-imzası** | | **4.500+** |
+
+Kalite filtreleri (yanlış pozitif kalkanı):
+- PseudoSigner/Heuristic girdileri elendi (gerçek imza değil)
+- Tek-bayt-tekrarı desenler elendi (90 90 90... NOP kaydırağı — "Hide&Protect V1.0X" vakası)
+- EP ailesi için ≥6 kesin bayt şartı; EP kararları VMP kapısına ertelenir
+- R_TUM dizgileri kaynak kodunda ve binary'de KARISTIRILMIŞ (öz-referans kalkanı)
+
+## v7.3) ÖZ-REFERANS KALKANI (v6'da bulunan kusur → v7'de kapatıldı)
+
+v6 dedektörü KENDİ binary'sini "TinyLoad/Enigma" sanabiliyordu: imza sabitleri
+(.rodata'daki açık dizgiler) tam-dosya taramasında kendine çarpıyordu.
+v7 çözümü:
+1. Tam-dosya (R_TUM) imza dizgileri + TinyLoad XXTEA anahtar bloğu Python
+   önhesaplamasıyla **XOR-karıştırılmış bayt dizileri** olarak gömülür
+   (`sakli_anahtar(i) = 0x5A + 7*i`); kaynak kodda ve binary'de açık dizgi YOK.
+2. PEiD isim tablosuyla çakışan dizgiler ("Enigma protector v" ⊂ PEiD adı
+   "Enigma protector v1.02 -> ...") tam-tarama listesinden bilinçli çıkarıldı —
+   Enigma ailesi bölüm adı + bölge-kısıtlı dizgiyle tespit edilir (çakışma imkânsız).
+3. Test: `vmpdet7_windows.exe` kendi binary'sini tarar → "koruyucu bolum yok — PAKETSIZ" (temiz).
+
+## v7.4) v7 regresyon sonuçları (hepsi bu turda koşuldu)
+
+| Test | Sonuç |
+|---|---|
+| 310 dosyalık VMProtect kör korpusu (adlar rastgele gizli) | **310/310 %100 TOP-1 + aday-set** |
+| vmp_340_adlar_degisti.exe (bölüm adları değiştirilmiş VMP) | VMProtect DETECTED (yapısal bayrak deseni) — EP 'ROPacker' yanıltıcısı geri çevrildi |
+| ConfuserEx sentetik .NET (CLI+BSJB+#Strings+su damgası) | **ConfuserEx (.NET) 9.9.9** (sürüm çözüldü) |
+| Babel sentetik .NET ("Babel" metadata stream) | **Babel .NET** (K1: de4dot HasMetadataStream) |
+| .NET Reactor sentetik (NecroVM.Runtime + $method0x + UTF-16 "is tampered.") | **.NET Reactor** |
+| Gerçek .NET assembly (AntiDe4dot.exe, temiz) | ".NET assembly (CLR başlığı)" — yanlış aile yok |
+| Temiz PE'ler (Test_32/64 exe+dll, hello_paketsiz, korumasız) | hepsi TEMİZ |
+| Dedektörün kendi binary'si (zig PE, öz-referans) | TEMİZ (PAKETSIZ) |
+| obfusheader fake-signature gerçek örneği | SAHTE İMZA DEMETİ (doğru) |
+| Klasik ornekler (UPX gerçek, Themida izi, es3n1n, Ryujin, Nocturne, TinyLoad, PyInstaller) | hepsi doğru aile |
+| 310 + 33 ornek + 7 temiz + öz-tarama | **0 hata, 0 yanlış pozitif** |
+
+## v7.5) v7'ye eşlik eden dosyalar
+
+```
+src/peid_db.h           — OTOMATİK ÜRETİM (v7_uret.py): PEiD 2768 EP + 382 tam-tarama imzası
+src/die_db.h            — OTOMATİK ÜRETİM (v7_uret.py): DIE 1287 EP + 42 içerik + 90 bölüm-adı
+src/universal_db.h      — v6 DB + .NET işaret tabloları + Themida derin blok + öz-referans kalkanı
+src/universal_tara.h    — v7 motoru: S0-S8 (EP motoru, .NET metadata, Themida, erteleme mimarisi)
+src/vmpdet5.cpp         — v7 entegrasyonu: Girdi bağlamı (EP/CLI/mimari), CrackProof kuralı,
+                          JSON/TUI evren-EP/NET/THEMIDA alanları, VMP-kapısı ertelemesi
+bin/vmpdet7_linux       — Linux derlemesi (g++ -O2)
+bin/vmpdet7_windows.exe — Windows x64 statik (zig cc 0.13.0, x86_64-windows-gnu)
+scripts/v7_uret.py      — imza çıkarıcı: PEiD userDB + DIE .sg → C++ tabloları (kalite filtreli)
+scripts/net_ornek_uret.py — .NET sentetik örnek üretici (yapısal olarak geçerli PE+CLI+BSJB)
+ornekler/evren/net_*.exe — 3 .NET sentetik test (ConfuserEx/Babel/Reactor)
+```
+
+## v7.6) Kapsam tablosu — hangi ekosistem artık tanınıyor?
+
+- **Klasik packer'lar (A5 listesi)**: UPX (sürüm+yöntem), ASPack (sürüm!), PECompact,
+  MPRESS, NSPack, FSG, MEW, Petite, Upack/WinUpack, tElock, RLPack, WWPack32, NeoLite,
+  eXPressor (sürüm dizgisiyle), SVKP, Morphine, Yoda, PECrypt, ExeStealth, hXOR,
+  PEPack, PEX, Pack Master, TinyLoad... — PEiD 2768 EP imzasıyla SÜRÜM düzeyinde
+- **.NET protector'ları (A7 listesi)**: ConfuserEx (sürümle), KoiVM, .NET Reactor,
+  Eazfuscator, Agile.NET/CliSecure, Babel, BeeByte*, Dotfuscator, SmartAssembly,
+  Spices.Net, Goliath.NET, MaxtoCode, DNGuard, ILProtector, Xenocode, CodeVeil,
+  XerinFuscator, LDK .NET, ConfuserEx Bed's/DotNetPatcher mod'ları
+  (*BeeByte: sağlam statik işaret yok — dokümante sınır)
+- **Modern protector'lar**: Themida/WinLicense (sürüm haritası + x64→3.x), Enigma,
+  VMProtect (.NET dahil), ASProtect, Oreans CodeVirtualizer, Obsidium, EXECryptor,
+  StarForce, Safengine, Armadillo, PELock, PESpin, VBox...
+- **Yeni dalga (A19)**: Tencent VM (.tvm0), CrackProof (harf-karıştırılmış import),
+  PyArmor, PyInstaller (python sürümü), Nuitka, es3n1n, Ryujin, Nocturne, wVmp,
+  obfus.h/obfusheader.h (sahte-imza demeti), KiteShield (ELF), zhidun (APK)
+- **Kurulum/SFX**: NSIS, Inno Setup, WinRAR/7z/zip SFX

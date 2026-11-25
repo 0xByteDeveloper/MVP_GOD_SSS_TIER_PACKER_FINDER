@@ -1,4 +1,3 @@
 @echo off
-REM vmpdet4 Windows derlemesi (MinGW-w64 ya da MSVC)
-REM MinGW: g++ -O2 -o vmpdet4_windows.exe vmpdet4.cpp -std=c++17 -static -lpsapi
-g++ -O2 -o vmpdet4_windows.exe vmpdet4.cpp -std=c++17 -static -lpsapi
+rem v7 IMMORTAL - Windows derlemesi (MinGW-w64)
+x86_64-w64-mingw32-g++ -O2 -std=c++17 -static -o ..\bin\vmpdet7_windows.exe vmpdet5.cpp -lpsapi

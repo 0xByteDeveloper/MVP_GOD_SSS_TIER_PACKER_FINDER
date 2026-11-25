@@ -1,0 +1,54 @@
+# v7 REGRESYON RAPORU — 2026-11-25 — IMMORTAL motor
+
+## 1) VMProtect 310 kör korpusu (kor_test_v6.py, adlar rastgele gizli)
+
+SONUC: 310 dosya | VMP tespit: 310/310
+  TOP-1 kesin/esitlik: 310/310 (100.0%)
+  + ADAY-SET: 310/310 (100.0%)
+  hatalar: 0
+
+## 2) Örnek dosyalar
+Test_64_paketsiz.exe: HAYIR (NEGATIF KARAR) 
+cift_vmp_340_340.exe: DETECTED (.vmp bolum(leri)) 
+cift_vmp_340ic_394dis.exe: DETECTED (.vmp bolum(leri)) 
+cift_vmp_394ic_340dis_v5.exe: DETECTED (.vmp bolum(leri)) 
+cift_vmp_hello.exe: DETECTED (.vmp bolum(leri)) 
+gercek_UPX.exe: HAYIR (NEGATIF KARAR) UPX 
+hello_paketsiz.exe: HAYIR (NEGATIF KARAR) 
+korumasiz_Test_64.exe: HAYIR (NEGATIF KARAR) 
+themida_izi_sentetik.exe: HAYIR (NEGATIF KARAR) Themida / WinLicense (Oreans) 
+uclu_upx_vmp_vmp.exe: HAYIR (NEGATIF KARAR) UPX 
+upx_dis_vmp_ic.exe: HAYIR (NEGATIF KARAR) UPX 
+vmp309_T32E_Move_Virt.exe: DETECTED (.vmp bolum(leri)) 
+vmp394_T32E_fn0.exe: DETECTED (.vmp bolum(leri)) 
+vmp_340_adlar_degisti.exe: DETECTED (koruyucu bolum bayrak deseni (0x68000060 tipi)) 
+vmp_394_hello.exe: DETECTED (.vmp bolum(leri)) 
+vmp_ult_309_fn0.exe: DETECTED (.vmp bolum(leri)) 
+vmp_ult_340_fn0.exe: DETECTED (.vmp bolum(leri)) 
+es3n1n.exe: HAYIR (NEGATIF KARAR) es3n1n/obfuscator 
+gercek_vmp_bolum.exe: DETECTED (.vmp bolum(leri)) 
+net_babel_sentetik.exe: HAYIR (NEGATIF KARAR) Babel .NET 
+net_confuserex_sentetik.exe: HAYIR (NEGATIF KARAR) ConfuserEx (.NET) 9.9.9 
+net_reactor_sentetik.exe: HAYIR (NEGATIF KARAR) .NET Reactor 
+nocturne.exe: HAYIR (NEGATIF KARAR) Nocturne 
+obfh.exe: HAYIR (NEGATIF KARAR) obfus.h (DosX) 
+obfusheader_fakesig_GERCEK.exe: HAYIR (NEGATIF KARAR) obfus.h / obfusheader.h (SAHTE IMZA MODU) 
+pyinstaller_cookie_sim.exe: HAYIR (NEGATIF KARAR) PyInstaller 
+ryujin.exe: HAYIR (NEGATIF KARAR) Ryujin Protector 
+sahte_demet.exe: HAYIR (NEGATIF KARAR) obfus.h / obfusheader.h (SAHTE IMZA MODU) 
+tinyload.exe: HAYIR (NEGATIF KARAR) TinyLoad 
+upx531_best_win32.exe: HAYIR (NEGATIF KARAR) UPX 
+upx531_lzma_win64.exe: HAYIR (NEGATIF KARAR) UPX 
+upx531_nrv2b_win32.exe: HAYIR (NEGATIF KARAR) UPX 
+
+## 3) Temiz PE'ler (yanlış pozitif OLMAMALI)
+Test_32.exe: TEMIZ
+Test_64.exe: TEMIZ
+Test_32.dll: TEMIZ
+Test_64.dll: TEMIZ
+hello_paketsiz.exe: TEMIZ
+Test_64_paketsiz.exe: TEMIZ
+korumasiz_Test_64.exe: TEMIZ
+
+## 4) Öz-referans testi (dedektörün kendi binary'si)
+Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil

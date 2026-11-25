@@ -35,6 +35,82 @@ struct BaytImza {
 };
 
 // ---------------------------------------------------------------------------
+// v7 GUVENLIK — OZ-REFERANS KALKANI
+// R_TUM imza dizgileri ve TinyLoad anahtar blogu KARISTIRILMIS bayt dizileri
+// olarak gomulur: dedektorun kendi binary'sinde bu bayt dizileri ACIK sekilde
+// yer almaz (kaynakta da yok — Python on-hesaplamasiyla uretilmislerdir).
+// (v6'da bulunan kusur: vmpdet kendi binary'sini 'TinyLoad/Enigma' saniyordu —
+//  imza sabitleri .rodata'da durdugu icin tarama KENDI imzalarina carpiyordu.)
+// karistirma: cozulmus[i] = karisik[i] ^ ((0x5A + 7*i) & 0xFF)
+// ---------------------------------------------------------------------------
+constexpr uint8_t sakli_anahtar(size_t i) { return (uint8_t)(0x5A + i * 7); }
+
+struct SakliDizi {
+    const uint8_t* b;
+    size_t boy;
+};
+// "Enigma protector v" (18 bayt) karistirilmis:
+static const uint8_t SKB_FAKE_ENIGMA[] = {
+    0x1F, 0x0F, 0x01, 0x08, 0x1B, 0x1C, 0xA4, 0xFB, 0xE0, 0xF6, 0xD4, 0xC2,
+    0xCD, 0xC1, 0xD3, 0xB1, 0xEA, 0xA7 };
+// "denuvo_atd" (10 bayt) karistirilmis:
+static const uint8_t SKB_FAKE_DENUVO[] = {
+    0x3E, 0x04, 0x06, 0x1A, 0x00, 0x12, 0xDB, 0xEA, 0xE6, 0xFD };
+// "NUITKA_ONEFILE_PARENT" (21 bayt) karistirilmis:
+static const uint8_t SKB_FAKE_NUITKA[] = {
+    0x14, 0x34, 0x21, 0x3B, 0x3D, 0x3C, 0xDB, 0xC4, 0xDC, 0xDC, 0xE6, 0xEE,
+    0xE2, 0xF0, 0xE3, 0x93, 0x8B, 0x83, 0x9D, 0x91, 0xB2 };
+// "Video created by SCREEN2EXE/SCREEN2SWF" (38 bayt) karistirilmis:
+static const uint8_t SKB_FAKE_SCREEN2EXE[] = {
+    0x0C, 0x08, 0x0C, 0x0A, 0x19, 0x5D, 0xE7, 0xF9, 0xF7, 0xF8, 0xD4, 0xC2,
+    0xCA, 0x95, 0xDE, 0xBA, 0xEA, 0x82, 0x9B, 0x8D, 0xA3, 0xA8, 0xBA, 0xC9,
+    0x47, 0x51, 0x55, 0x38, 0x4D, 0x66, 0x7E, 0x76, 0x7F, 0x0F, 0x7A, 0x1C,
+    0x01, 0x1B };
+// "The Enigma Protector" (20 bayt) karistirilmis:
+static const uint8_t SKB_ENIGMA_TAM[] = {
+    0x0E, 0x09, 0x0D, 0x4F, 0x33, 0x13, 0xED, 0xEC, 0xFF, 0xF8, 0x80, 0xF7,
+    0xDC, 0xDA, 0xC8, 0xA6, 0xA9, 0xA5, 0xB7, 0xAD };
+// TinyLoad .pxkey XXTEA anahtar blogu (24 bayt) karistirilmis:
+static const uint8_t SKB_TINYLOAD[] = {
+    0x6D, 0x72, 0xB6, 0xAF, 0x7B, 0x8D, 0x69, 0x75, 0x2C, 0x23, 0x5E, 0x6D,
+    0x41, 0x0B, 0x11, 0x1D, 0xC7, 0x21, 0x75, 0x54, 0x4B, 0x33, 0xF3, 0x4B };
+
+static const SakliDizi SK_FAKE_ENIGMA  = { SKB_FAKE_ENIGMA,  sizeof(SKB_FAKE_ENIGMA) };
+static const SakliDizi SK_FAKE_DENUVO  = { SKB_FAKE_DENUVO,  sizeof(SKB_FAKE_DENUVO) };
+static const SakliDizi SK_FAKE_NUITKA  = { SKB_FAKE_NUITKA,  sizeof(SKB_FAKE_NUITKA) };
+static const SakliDizi SK_FAKE_SCREEN2EXE = { SKB_FAKE_SCREEN2EXE, sizeof(SKB_FAKE_SCREEN2EXE) };
+static const SakliDizi SK_ENIGMA_TAM   = { SKB_ENIGMA_TAM,   sizeof(SKB_ENIGMA_TAM) };
+static const SakliDizi SK_TINYLOAD     = { SKB_TINYLOAD,     sizeof(SKB_TINYLOAD) };
+
+// karisik bayt dizisini cozup NUL-sonlandirmali dizgi uretir
+inline size_t sakli_coz(const SakliDizi& s, char* cikis, size_t kapasite) {
+    size_t n = std::min(s.boy, kapasite - 1);
+    for (size_t i = 0; i < n; i++)
+        cikis[i] = (char)(s.b[i] ^ sakli_anahtar(i));
+    cikis[n] = 0;
+    return n;
+}
+// karisik bayt dizisini cozup ham bayt yazar (TinyLoad anahtar blogu icin)
+inline void sakli_coz_bayt(const SakliDizi& s, uint8_t* cikis) {
+    for (size_t i = 0; i < s.boy; i++) cikis[i] = (uint8_t)(s.b[i] ^ sakli_anahtar(i));
+}
+
+// R_TUM (tam-dosya) imzalari — OZEL LISTE: karistirilmis gomulur, motor S3'te
+// cozerek karsilastirir (oz-referans kalkani — detay yukarida)
+// NOT: 'Enigma protector v' ve 'The Enigma Protector' BILINCLI olarak bu listede
+// DEGIL: PEiD tablo adi 'Enigma protector v1.02 -> ...' bu dizgiyi ICERDIGINDEN
+// dedektorun kendi .rodata'si (isim tablosu) kendine vururdu. Enigma ailesi
+// bolum adi (.enigma1/.enigma2) + bolge-kisitli 'Enigma protector' dizgisiyle
+// (R_BASLIK|R_KORU) tespit edilir — o taramalar isim tablosuna carpamaz.
+struct SakliImza { const SakliDizi* dizgi; const char* not_; };
+static const SakliImza SAKLI_TABLO[] = {
+    { &SK_FAKE_DENUVO,    "K1: obfus.h FAKE_DENUVO .arch bolumu" },
+    { &SK_FAKE_NUITKA,    "K1: obfus.h FAKE_NUITKA .rdata" },
+    { &SK_FAKE_SCREEN2EXE,"K1: obfus.h FAKE_SCREEN2EXE .text" },
+};
+static const int SAKLI_TABLO_ADET = sizeof(SAKLI_TABLO) / sizeof(SAKLI_TABLO[0]);
+
+// ---------------------------------------------------------------------------
 // BOLUM-ADI IMZA TABLOSU — aile eslesmesi icin
 // kurallar:
 //   bolumler : eslesme icin aday bolum adlari (kucuk-harf duyarsiz, ILKI eslesirse aile vurur)
@@ -97,6 +173,8 @@ static const BolumImza BOLUM_TABLO[] = {
       { ".cmd", 0 }, 1, V_OTHER },
     { "KiteShield", "elf-packer", "K1: .rt_info bolumu (Linux x86-64 ELF)",
       { ".rt_info", 0 }, 1, V_OTHER },
+    { "Tencent VM (TVM)", "vm", "K1: jz0/tvm-devirt README — '.tvm0' VM bolumu (dispatcher+handler); NeuroSaki987/tvm-recover '.tvm0' unpack + PE rewrite",
+      { ".tvm0", ".tvm1", 0 }, 1, V_OTHER },
     { "zhidun (Android)", "apk-protector", "K1: .setting bolumu (DEX sifreleme)",
       { ".setting", 0 }, 1, V_OTHER },
     { "MoleBox (miras surum)", "packer", "K3: Molebox klasik bolumleri",
@@ -186,11 +264,7 @@ static const BaytImza DIZGI_TABLO[] = {
     { "VMProtect", R_BASLIK | R_KORU, "K1: SDK isaretleri vmprotectsdk32/64.dll" },
     { "vmprotectsdk32.dll", R_KORU | R_KUYRUK, "K1: core/intel.cc:19576 import kontrolu" },
     { "vmprotectsdk64.dll", R_KORU | R_KUYRUK, "K1" },
-    // obfus.h sahte izleri (K1: include/obfus.h:330-400 FAKE_* dizileri)
-    { "Enigma protector v", R_TUM, "K1: FAKE_ENIGMA 19 bayt (son bayt 0x01)" },
-    { "denuvo_atd", R_TUM, "K1: FAKE_DENUVO .arch bolumu" },
-    { "NUITKA_ONEFILE_PARENT", R_TUM, "K1: FAKE_NUITKA .rdata" },
-    { "Video created by SCREEN2EXE/SCREEN2SWF", R_TUM, "K1: FAKE_SCREEN2EXE .text" },
+    // (obfus.h FAKE_* izleri asagidaki SAKLI_TABLO'da — karistirilmis)
     // PyInstaller (K1: bootloader/src/pyi_utils.c:169 MAGIC_BASE)
     { "MEI\x0c\r\n\x0c\x0e", R_KUYRUK, "K1: MAGIC_BASE 'MEI\\0\\13\\12\\13\\16' + EOF cookie" },
     { "_MEIPASS", R_KUYRUK | R_KORU, "K1: pyi_main.c:1389" },
@@ -218,7 +292,6 @@ static const BaytImza DIZGI_TABLO[] = {
     // (bayt deseni motor tarafinda ozel olarak aranir — asagida OZEL_TABLO)
     // Ticari protector dizgileri (K3)
     { "Enigma protector", R_KORU | R_BASLIK, "K3" },
-    { "The Enigma Protector", R_TUM, "K3" },
     { "ASProtect", R_KORU | R_KUYRUK, "K3" },
     { "Obsidium", R_KORU | R_KUYRUK, "K3" },
     { "EXECryptor", R_KORU, "K3" },
@@ -245,10 +318,7 @@ static const int DIZGI_TABLO_ADET = sizeof(DIZGI_TABLO) / sizeof(DIZGI_TABLO[0])
 // ---------------------------------------------------------------------------
 // TinyLoad .pxkey XXTEA anahtar blogu (K1: TinyLoad.cpp:255-262)
 //   guard1=0xC0DE1337 k0=0xFEEDF00D k1=0xCAFEBABE k2=0xDEADBEEF k3=0x8BADF00D guard2=0xB007DEAD
-static const uint8_t TINYLOAD_ANAHTAR[] = {
-    0x37,0x13,0xDE,0xC0, 0x0D,0xF0,0xED,0xFE, 0xBE,0xBA,0xFE,0xCA,
-    0xEF,0xBE,0xAD,0xDE, 0x0D,0xF0,0xAD,0x8B, 0xAD,0xDE,0x07,0xB0
-};
+//   v7: acik baytlar yukarida SK_TINYLOAD icinde KARISTIRILMIS saklanir (oz-referans kalkani)
 // XXTEA delta (TinyLoad + eski packer mirasi)
 static const uint8_t XXTEA_DELTA[] = { 0xB9,0x79,0x37,0x9E };
 // ChaCha20 "expand 32-byte k" (maya ELF protector — K1: chacha sabiti)
@@ -334,5 +404,56 @@ static const SahteAile SAHTE_AILELER[] = {
 
 // yap (undisassemble) README/kaynak notu: tespit mekanizmasini atlatmak icin
 // bilinen protector bolumleri + dizgileri kopyalar (K1: repo taramasi)
+
+// ---------------------------------------------------------------------------
+// v7 — .NET METADATA ISARET TABLOSU (#Strings yigininda tip/ad-uzayi adlari)
+// K1: de4dot kaynagi (de4dot.code/deobfuscators/*) — her obfuscator'in KENDI
+//     dedektor kodundan; K3: DIE db/PE/protector_*.sg kurallarindan capraz
+// ---------------------------------------------------------------------------
+struct NetImza {
+    const char* aile;
+    const char* isaret;      // #Strings yigini / metadata bolgesinde aranir
+    const char* not_;        // kaynak kaniti
+};
+static const NetImza NET_TABLO[] = {
+    { "ConfuserEx (.NET)", "ConfusedByAttribute",
+      "K1: ConfuserEx WatermarkingProtection.cs:51 + de4dot Confuser/Deobfuscator.cs:505" },
+    { "KoiVM (ConfuserEx VM)", "KoiVM", "K3: DIE protector_KoiVM.2.sg — 'KoiVM' tip adi" },
+    { "KoiVM (ConfuserEx VM)", "VMEntryRun", "K3: DIE protector_KoiVM.2.sg" },
+    { ".NET Reactor", "NecroVM.Runtime", "K3: DIE protector_NetReactor.2.sg" },
+    { ".NET Reactor", "$method0x", "K3: DIE — $method0x6000... metod adi deseni" },
+    { "Agile.NET / CliSecure", "ObfuscatedByCliSecureAttribute", "K3: DIE protector_CliSecure.2.sg" },
+    { "Agile.NET / CliSecure", "CliSecureRt", "K1: de4dot Agile_NET/CliSecureRtType.cs" },
+    { "Babel .NET", "BabelAttribute", "K3: DIE protector_Babel_.NET.2.sg" },
+    { "Babel .NET", "BabelObfuscatorAttribute", "K3: DIE protector_Babel_.NET.2.sg" },
+    { "Dotfuscator", "DotfuscatorAttribute", "K3: DIE protector_Dotfuscator.2.sg" },
+    { "SmartAssembly", "SmartAssembly.Attributes", "K3: DIE protector_Smart_Assembly.2.sg" },
+    { "Spices.Net", "NineRays.Obfuscator", "K3: DIE protector_SpicesNet.2.sg" },
+    { "Goliath.NET", "ObfuscatedByGoliath", "K3: DIE protector_Goliath.2.sg" },
+    { "Goliath.NET", "Goliath.NET.CodeShield", "K3: DIE protector_Goliath.2.sg" },
+    { "MaxtoCode", "MRuntime3.dll", "K3: DIE protector_Maxtocode.2.sg" },
+    { "MaxtoCode", "Attick.dll", "K3: DIE protector_Maxtocode.2.sg" },
+    { "DNGuard", "ZYXDNGuarder", "K3: DIE protector_DNGuard.2.sg" },
+    { "DNGuard", "HVMRuntm.dll", "K3: DIE protector_DNGuard.2.sg" },
+    { "ILProtector", "Protect32.dll", "K3: DIE protector_ILProtector.2.sg" },
+    { "ILProtector", "Protect64.dll", "K3: DIE protector_ILProtector.2.sg" },
+    { "Xenocode Postbuild", "Xenocode.Client.Attributes.AssemblyAttributes", "K3: DIE protector_Xenocode_Postbuild.2.sg" },
+    { "CodeVeil", "____KILL", "K3: DIE protector_CodeVeil.2.sg" },
+    { "XerinFuscator", "Xerin.Runtime", "K3: DIE protector_XerinFuscator.2.sg" },
+    { "LDK .NET", "haspdnert.dll", "K3: DIE protector_LDK_.NET.2.sg" },
+    { "ConfuserEx (Bed's mod)", "\xD0\xB2\xD0\xB5\xC9\x97\xD1\x81", "K3: DIE — 'вє∂ѕ' assembly adi (UTF-8)" },
+};
+
+// .NET surum su damgalari — ham metadata bolgesinde ASCII olarak aranir,
+// izleyen karakterlerden surum cozulur (ConfuserEx v9.0.28 ...)
+struct NetSuImza { const char* aile; const char* isaret; };
+static const NetSuImza NET_SU_TABLO[] = {
+    { "ConfuserEx (.NET)", "ConfuserEx v" },       // K1: ConfuserEx watermark
+    { "ConfuserEx (.NET)", "Confuser.Core " },      // K1: mkaring/ConfuserEx core damgasi
+    { "ConfuserEx (klasik)", "Confuser v" },        // K1: de4dot regex ^Confuser v\d+
+};
+
+// .NET Reactor UTF-16 anti-tamper mesaji (#US yigini) — motor ozel arar:
+//   "is tampered."  (K3: DIE protector_NetReactor.2.sg UTF-16LE deseni)
 
 } // namespace universaldb
