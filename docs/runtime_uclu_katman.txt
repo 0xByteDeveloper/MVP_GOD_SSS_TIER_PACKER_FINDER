@@ -1,0 +1,12 @@
+
+  [96m[1m[RUNTIME ANALIZ — CANLI SUREC][0m hedef: /home/z/my-project/work/yeni/08_Katman_VMP_UPX/hello_3439_upx.exe
+  surec baslatildi (pid=16316, wine=/home/z/my-project/scripts/wine_run.sh), 5000 ms bekleniyor...
+  hedef bulundu: pid=16316 taban=0x140000000 boy=0x28000
+  [32m[DUMP OK][0m 163840 bayt → /tmp/dump_r3.bin
+  [33mIC KATMAN GERI KAZANIMI (bellekte gömülü PE basliklari):[0m
+    PE@0x2520C bolumler: .vmp0(vsz=108) .vmp1(vsz=2052) .vmp0(vsz=900)
+      [32m-> IC KATMAN SURUM: Ultimate 3.4.0 (capa2 hello-girdi ailesi)[0m
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [93m[1mUPX bellekte ACILMIS goruntu[0m — dis katman UPX'i calisma aninda cozmustur;
+  ic katmanlar yukaridaki GERI KAZANIM bloklarinda raporlandi

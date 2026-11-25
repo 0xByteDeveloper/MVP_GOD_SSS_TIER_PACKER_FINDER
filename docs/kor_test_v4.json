@@ -1,0 +1,10 @@
+{
+ "tarama": "407 korumali build (10 surum, isimler rastgele gizlendi)",
+ "top1_kesin_arti_esitlik": "407/407 (100.0%)",
+ "esitlik_sinifi_build": 25,
+ "aday_set_dogruluk": "407/407 (100.0%)",
+ "profil_eslesme": "308/308 tanimlanabilir (%100.0) — PURE-wrapper'lar ayristirilamaz sinirinda",
+ "hatalar": [],
+ "yontem": "v3 katmanli deterministik DB: K1 karakteristik sert filtre + K2 PURE cipa (raw/vsz) + K3 eski-nesil n-gram + K4 yapisal profil (408). Pro 3.8.1 ∥ Ult 3.8.4 wrapper ciktilari bayt-ozdest (894 invariant pozisyonda 0 fark) — esitlik sinifi olarak raporlanir. ML YOK.",
+ "onceki_surum": "v1: 66.0% / v2: 96.6% TOP-1"
+}

@@ -1,0 +1,10 @@
+
+  [96m[1m[RUNTIME ANALIZ — CANLI SUREC][0m hedef: /home/z/my-project/work/yeni/09_Runtime_Demo/hello_394.vmp.exe
+  surec baslatildi (pid=16173, wine=/home/z/my-project/scripts/wine_run.sh), 3500 ms bekleniyor...
+  hedef bulundu: pid=16173 taban=0x140000000 boy=0x24000
+  [32m[DUMP OK][0m 147456 bayt → /tmp/dump_r1.bin
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [32mVMProtect tespit edildi[0m (.vmp bolum(leri))
+  surum (dump): Ultimate 3.9.4 (guven: YUKSEK (capa2 aile cipi birebir))
+  bolumler (dump): .vmp0(512 B) .vmp1(1536 B) 

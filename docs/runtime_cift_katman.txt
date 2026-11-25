@@ -1,0 +1,13 @@
+
+  [96m[1m[RUNTIME ANALIZ — CANLI SUREC][0m hedef: /home/z/my-project/work/yeni/09_Runtime_Demo/hello_34_394.vmp.vmp.exe
+  surec baslatildi (pid=16245, wine=/home/z/my-project/scripts/wine_run.sh), 4500 ms bekleniyor...
+  hedef bulundu: pid=16245 taban=0x140000000 boy=0x25000
+  [32m[DUMP OK][0m 151552 bayt → /tmp/dump_r2.bin
+
+  [96m[1m[RUNTIME SONUC — dump yeniden analiz][0m
+  dump karari: [32mVMProtect tespit edildi[0m (.vmp bolum(leri))
+  bolumler (dump): .vmp0(512 B) .vmp1(2560 B) .vmp0(1024 B) 
+  [33mKATMAN KANITI (dump):[0m cift .vmp bolum adi (double-protect);
+  [33mKATMAN (dump):[0m .vmp0(512 B)       -> bilinmeyen (runtime onerilir: --live) (capa/n-gram eslesmedi)
+  [33mKATMAN (dump):[0m .vmp1(2560 B)      -> Ultimate 3.4.0 (capa2 hello-ailesi)
+  [33mKATMAN (dump):[0m .vmp0(1024 B)      -> bilinmeyen (runtime onerilir: --live) (capa/n-gram eslesmedi)

@@ -1,0 +1,133 @@
+
+ VMDETECT v4 // GOD SSS TIER // TARGET ACQUISITION =======================
+  TARGET   : /home/z/my-project/work/corpus/VMProtect_Ultimate_3.4.0/Test_64_fn0.vmp.exe
+  SIZE     : 44544 bytes
+  ARCH     : x64
+  STATUS   : TARGET LOCKED — VMProtect SIGNATURE CONFIRMED
+  EVIDENCE : .vmp bolum(leri)
+
+ STRUCTURAL INTELLIGENCE -------------------------------------------------
+  Protector sections : 1  (.vmp0(3072 B))
+  Layout class       : PURE
+  Section flags      : .vmp0:0x68000060
+  Imports  : 2 DLL
+  .reloc   : present
+
+ VERSION IDENTIFICATION --------------------------------------------------
+  #1 Ultimate 3.4.0         [********************] 100%  (dist=0 EXACT)
+  DECISION PATH      : K2: PURE cipa birebir eslesme
+  MATCHED SIGNATURE  : PURE-wrapper (kripto-bit secenekleri ayristirilamaz)
+
+ FEATURE ANALYSIS --------------------------------------------------------
+  [ ] VirtualizedFunction    : none
+  [ ] ImportProtection       : YOK
+  [?] DebugMode              : BELIRSIZ (profil eslesmedi)
+  [?] CryptValues            : BELIRSIZ (profil eslesmedi)
+  [?] RunnerCRC              : BELIRSIZ (profil eslesmedi)
+  [?] EncryptRegs            : BELIRSIZ (profil eslesmedi)
+  [?] Pack                   : BELIRSIZ (profil eslesmedi)
+  [?] CheckDebugger          : BELIRSIZ (profil eslesmedi)
+  [?] CheckVirtualMachine    : BELIRSIZ (profil eslesmedi)
+  [?] MemoryProtection       : BELIRSIZ (profil eslesmedi)
+  [?] StripFixups            : BELIRSIZ (profil eslesmedi)
+  [?] ResourceProtection     : BELIRSIZ (profil eslesmedi)
+  [?] CheckKernelDebugger    : BELIRSIZ (profil eslesmedi)
+  [?] StripDebugInfo         : BELIRSIZ (profil eslesmedi)
+  [?] VirtualFiles           : BELIRSIZ (profil eslesmedi)
+  [?] LoaderCRC              : BELIRSIZ (profil eslesmedi)
+  [?] EncryptBytecode        : BELIRSIZ (profil eslesmedi)
+==========================================================================
+
+
+==============================================================================
+
+
+ VMDETECT v4 // GOD SSS TIER // TARGET ACQUISITION =======================
+  TARGET   : /home/z/my-project/work/yeni/01_Gercek_UPX/Test_64_upx.exe
+  SIZE     : 8192 bytes
+  ARCH     : x64
+  STATUS   : NOT VMProtect — NEGATIVE VERDICT
+  PACKER   : UPX (bolum tablosu sikistirilmis)
+  NOTE     : UPX! sihri
+==========================================================================
+
+
+==============================================================================
+
+
+ VMDETECT v4 // GOD SSS TIER // TARGET ACQUISITION =======================
+  TARGET   : /home/z/my-project/work/yeni/07_Katman_VMP_VMP/Test_64_34_34.vmp.vmp.exe
+  SIZE     : 47616 bytes
+  ARCH     : x64
+  STATUS   : TARGET LOCKED — VMProtect SIGNATURE CONFIRMED
+  EVIDENCE : .vmp bolum(leri)
+  LAYERS   : MULTI-LAYER PROTECTION DETECTED
+            cift ayni-adli .vmp bolumu → DOUBLE VMProtect (katman ustu katman)
+            .vmp0(3072 B)      -> Ultimate 3.4.0 (capa (bolum boyutu cipi))
+            .vmp0(3072 B)      -> Ultimate 3.4.0 (capa (bolum boyutu cipi))
+
+ STRUCTURAL INTELLIGENCE -------------------------------------------------
+  Protector sections : 2  (.vmp0(3072 B), .vmp0(3072 B))
+  Layout class       : 
+  Section flags      : 
+  Imports  : 2 DLL
+  .reloc   : present
+
+ VERSION IDENTIFICATION --------------------------------------------------
+  DECISION PATH      : L: cift .vmp bolumu — katman katman surum atfi
+
+ FEATURE ANALYSIS --------------------------------------------------------
+  [ ] AnalizModu             : COKLU KATMAN — ozellik cikimi katman bazinda guvenilmez
+  [ ] Pack                   : KAPALI/yok
+  [ ] StripFixups            : KAPALI/yok
+  [ ] ImportProtection       : YOK
+==========================================================================
+
+
+==============================================================================
+
+
+ VMDETECT v4 // GOD SSS TIER // TARGET ACQUISITION =======================
+  TARGET   : /home/z/my-project/work/yeni/04_Bolum_Yeniden_Ad/Test_64_34_adlar_degisti.exe
+  SIZE     : 44544 bytes
+  ARCH     : x64
+  STATUS   : TARGET LOCKED — VMProtect SIGNATURE CONFIRMED
+  EVIDENCE : VMProtect dizgisi + koruyucu bolum
+  WARNING  : SECTION NAMES MODIFIED — adlar .vmp degil, yapi VMProtect
+            (kaynagi: script/OnAfterSaveFile ya da modlanmis motor)
+
+ STRUCTURAL INTELLIGENCE -------------------------------------------------
+  Protector sections : 1  (sect0(3072 B))
+  Layout class       : PURE
+  Section flags      : sect0:0x68000060
+  Imports  : 2 DLL
+  .reloc   : present
+
+ VERSION IDENTIFICATION --------------------------------------------------
+  #1 Ultimate 3.4.0         [********************] 100%  (dist=0 EXACT)
+  DECISION PATH      : K2: PURE cipa birebir eslesme
+  MATCHED SIGNATURE  : PURE-wrapper (kripto-bit secenekleri ayristirilamaz)
+
+ FEATURE ANALYSIS --------------------------------------------------------
+  [ ] VirtualizedFunction    : none
+  [ ] ImportProtection       : YOK
+  [?] DebugMode              : BELIRSIZ (profil eslesmedi)
+  [?] CryptValues            : BELIRSIZ (profil eslesmedi)
+  [?] RunnerCRC              : BELIRSIZ (profil eslesmedi)
+  [?] EncryptRegs            : BELIRSIZ (profil eslesmedi)
+  [?] Pack                   : BELIRSIZ (profil eslesmedi)
+  [?] CheckDebugger          : BELIRSIZ (profil eslesmedi)
+  [?] CheckVirtualMachine    : BELIRSIZ (profil eslesmedi)
+  [?] MemoryProtection       : BELIRSIZ (profil eslesmedi)
+  [?] StripFixups            : BELIRSIZ (profil eslesmedi)
+  [?] ResourceProtection     : BELIRSIZ (profil eslesmedi)
+  [?] CheckKernelDebugger    : BELIRSIZ (profil eslesmedi)
+  [?] StripDebugInfo         : BELIRSIZ (profil eslesmedi)
+  [?] VirtualFiles           : BELIRSIZ (profil eslesmedi)
+  [?] LoaderCRC              : BELIRSIZ (profil eslesmedi)
+  [?] EncryptBytecode        : BELIRSIZ (profil eslesmedi)
+==========================================================================
+
+
+==============================================================================
+

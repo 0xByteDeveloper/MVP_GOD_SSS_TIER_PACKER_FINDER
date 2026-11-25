@@ -1,0 +1,36 @@
+
+  [96m[1m=================== LOADER EMULATION (i4M tarzi — kod CALISTIRILMAZ) ===================
+[0m  [1/8] DOS/NT header dogrulama            : [32mTAMAM[0m (PE32+, 20 bolum)
+  [2/8] Tercih edilen ImageBase            : 0x140000000 (ASLR: DYNAMIC_BASE — taban kayabilir)
+  [3/8] Header kopyalama (SizeOfHeaders)   : tamam
+  [4/8] Bolum esleme (raw -> virtual)      : 20 bolum
+  [5/8] Base relocation                    : 2 blok / 0 giris (tablo mevcut, uygulanmasi gerekmez)
+  [6/8] Import cozumu                      : 2 DLL (KERNEL32.dll x10, msvcrt.dll x26)
+        IAT ornekleri                     : KERNEL32.dll!DeleteCriticalSection, KERNEL32.dll!EnterCriticalSection, KERNEL32.dll!GetLastError, KERNEL32.dll!InitializeCriticalSection, KERNEL32.dll!LeaveCriticalSection, KERNEL32.dll!SetUnhandledExceptionFilter, KERNEL32.dll!Sleep, KERNEL32.dll!TlsGetValue, KERNEL32.dll!VirtualProtect, KERNEL32.dll!VirtualQuery ...
+  [7/8] Mapped ImageBase guncellemesi      : 0x140000000
+  [8/8] Bolum korumalari                   :
+        .text      vsz=6512     raw=6656     [90mPAGE_EXECUTE_READ[0m
+        .data      vsz=192      raw=512      [90mPAGE_READWRITE[0m
+        .rdata     vsz=2504     raw=2560     [90mPAGE_READONLY[0m
+        .pdata     vsz=564      raw=1024     [90mPAGE_READONLY[0m
+        .xdata     vsz=408      raw=512      [90mPAGE_READONLY[0m
+        .bss       vsz=384      raw=0        [90mPAGE_READWRITE[0m
+        .idata     vsz=1352     raw=1536     [90mPAGE_READONLY[0m
+        .tls       vsz=16       raw=512      [90mPAGE_READWRITE[0m
+        .vmp0      vsz=108      raw=512      [90mPAGE_READONLY[0m
+        .debug_a   vsz=1216     raw=1536     [90mPAGE_READONLY[0m
+        .debug_i   vsz=42769    raw=43008    [90mPAGE_READONLY[0m
+        .debug_a   vsz=7841     raw=8192     [90mPAGE_READONLY[0m
+        .debug_l   vsz=7842     raw=8192     [90mPAGE_READONLY[0m
+        .debug_f   vsz=2080     raw=2560     [90mPAGE_READONLY[0m
+        .debug_s   vsz=743      raw=1024     [90mPAGE_READONLY[0m
+        .debug_l   vsz=4143     raw=4608     [90mPAGE_READONLY[0m
+        .debug_l   vsz=5202     raw=5632     [90mPAGE_READONLY[0m
+        .debug_r   vsz=396      raw=512      [90mPAGE_READONLY[0m
+        .vmp1      vsz=1396     raw=1536     [90mPAGE_EXECUTE_READ[0m
+        .reloc     vsz=108      raw=512      [90mPAGE_READONLY[0m
+  TLS dizini mevcut (callback'lar CALISTIRILMAZ, yalniz raporlanir)
+        callback[0] = 0x1400049A0
+  EP (giris noktasi)                       : RVA 0x1440 → bolum '.text'
+  Bellek goruntusu boyutu (SizeOfImage)    : 147456 bayt
+  [96m[1m======================================================================================[0m
