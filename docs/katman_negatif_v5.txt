@@ -20,12 +20,14 @@ VMProtect: HAYIR (NEGATIF KARAR)
 Packer: UPX (bolum tablosu sikistirilmis)
 Kanit: UPX! sihri
 
-=== NEGATIF: Themida izi (sentetik) ===
-TARGET: /home/z/my-project/work/repo/ornekler/themida_izi_sentetik.exe
+=== NEGATIF: UPX-dis + VMP-ic (katman ipucu) ===
+TARGET: /home/z/my-project/work/repo/ornekler/upx_dis_vmp_ic.exe
 Arch: x64 | Family: T64E
 VMProtect: HAYIR (NEGATIF KARAR)
-Packer: Themida / WinLicense
-Kanit: Themida ailesi izleri
+Packer: UPX (bolum tablosu sikistirilmis)
+Kanit: UPX! sihri
+
+OZET: 1 hedef | 0 VMProtect | 1 NEGATIF (VMP degil) | 0 esitlik sinifi (fn0 3.8.x) | 0 cok katmanli
 
 === NEGATIF: korumasiz Test_32.dll ===
 TARGET: /home/z/my-project/upload/orijinal/Test_32.dll
@@ -33,10 +35,16 @@ Arch: x86 | Family: T32D
 VMProtect: HAYIR (NEGATIF KARAR)
 Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil
 
-
 === NEGATIF: korumasiz Test_64.exe ===
 TARGET: /home/z/my-project/upload/orijinal/Test_64.exe
 Arch: x64 | Family: T64E
 VMProtect: HAYIR (NEGATIF KARAR)
 Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil
 
+=== OZ-TEST: dedektor KENDI binary'si (vmpdet5_windows.exe, statik mingw) ===
+TARGET: vmpdet5_windows.exe
+Arch: x64 | Family: T64E
+VMProtect: HAYIR (NEGATIF KARAR)
+Kanit: koruyucu bolum yok — PAKETSIZ / VMProtect degil
+  NOT: mingw calisma zamani 'UPX!'/'$Info' sabitleri tasiyor; v5 bolge-kisitli
+  imza taramasi sayesinde kendi binary'sini temiz gecer (v4 yanlis pozitif verirdi).

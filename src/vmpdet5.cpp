@@ -273,6 +273,40 @@ static std::string kucuk(const std::string& s) {
     return r;
 }
 
+// dizgi imza arama — yalnız geçerli BÖLGELERDE:
+//  (a) ilk 0x1000 bayt (DOS stub / başlık damgası — paketleyici damgaları buradadır)
+//  (b) standart-olmayan bölümlerin veri aralığı (paketleyici bölümleri)
+// Gerekçe: paketleyici ADI dizgileri başka programların .rdata'sında da geçebilir
+// (ör. dedektörün kendi imza tablosu!) — bölge kısıtı bunları eler.
+static bool dizgi_bolgede(const std::vector<uint8_t>& v, const char* s,
+                          const std::vector<const Bolum*>& korp) {
+    size_t ilen = strlen(s);
+    if (v.size() < ilen) return false;
+    size_t sinir = std::min(v.size(), (size_t)0x1000);
+    for (size_t i = 0; i + ilen <= sinir; i++)
+        if (!memcmp(v.data() + i, s, ilen)) return true;
+    for (auto* b : korp) {
+        size_t bas = b->ro;
+        size_t son = (size_t)b->ro + b->rsz;
+        if (son > v.size()) son = v.size();
+        for (size_t i = bas; i + ilen <= son; i++)
+            if (!memcmp(v.data() + i, s, ilen)) return true;
+    }
+    return false;
+}
+
+// kuyruk arama: dizgiyi yalnız SON 'kuyruk_bayt' bayt içinde arar
+// (gerçek UPX sihri dosya sonundadır; kod içindeki "UPX!" sabitleri yanlış tetikler)
+static bool kuyrukta_ara(const std::vector<uint8_t>& v, const char* dizgi,
+                         size_t kuyruk_bayt) {
+    size_t ilen = strlen(dizgi);
+    if (v.size() < ilen) return false;
+    size_t bas = v.size() > kuyruk_bayt ? v.size() - kuyruk_bayt : 0;
+    for (size_t i = bas; i + ilen <= v.size(); i++)
+        if (memcmp(v.data() + i, dizgi, ilen) == 0) return true;
+    return false;
+}
+
 static bool dosyada_ara(const std::vector<uint8_t>& v, const char* dizgi,
                         size_t sinir) {
     size_t ilen = strlen(dizgi);
@@ -334,9 +368,13 @@ static PackerTarama packer_tara(const PE& p, const std::vector<const Bolum*>& ko
     PackerTarama pt;
     for (auto* b : korp)
         if (upx_bolum_ad_mi(b->ad)) { pt.upx_bolum_var = true; break; }
-    pt.upx_gercek = dosyada_ara(p.veri, "UPX!", p.veri.size()) ||
-                    dosyada_ara(p.veri, "$Info: This file is packed with the UPX", p.veri.size());
-    pt.upx_bilgi_dizgisi = dosyada_ara(p.veri, "$Info: This file is packed", p.veri.size());
+    // UPX kanıtı yalnız KUYRUKTA aranır: gerçek UPX dosyaları sihri/trailer'ı
+    // dosya sonuna yazar; kod/gömülü dizgilerde geçen "UPX!"/"$Info" sabitleri
+    // (ör. statik mingw çalışma zamanı) yanlış pozitif verir.
+    pt.upx_gercek = dosyada_ara(p.veri, "UPX!", 0x1000) ||            // PE başlık sihri (offset ~500)
+                    kuyrukta_ara(p.veri, "UPX!", 8192) ||               // kuyruk (ELF/variyanlar)
+                    kuyrukta_ara(p.veri, "$Info: This file is packed with the UPX", 8192);
+    pt.upx_bilgi_dizgisi = kuyrukta_ara(p.veri, "$Info: This file is packed", 8192);
     pt.dotnet = (p.veri_dizin[14][0] != 0 && p.veri_dizin[14][1] != 0);
     for (auto& imza : PACKER_TABLO) {
         bool bolum_vur = false;
@@ -345,7 +383,7 @@ static PackerTarama packer_tara(const PE& p, const std::vector<const Bolum*>& ko
                 if (bn && kucuk(b->ad) == kucuk(bn)) { bolum_vur = true; break; }
         bool dizgi_vur = false;
         for (const char* sg : imza.dizgi)
-            if (sg && dosyada_ara(p.veri, sg, std::min(p.veri.size(), (size_t)4<<20)))
+            if (sg && dizgi_bolgede(p.veri, sg, korp))
                 { dizgi_vur = true; break; }
         if (bolum_vur || dizgi_vur) {
             if (strstr(imza.ad, "NSIS")) { pt.nsis_kurulum = true; }
@@ -519,7 +557,7 @@ static void analiz(const char* yol, Sonuc& s) {
         s.olumsuz_karar = true;
         if (pt.dotnet) { s.paketleyici = ".NET assembly (CLR basligi)"; s.tespit_notu = "yonetilen kod — VMProtect degil"; }
         else if (pt.nsis_kurulum) { s.paketleyici = "Nullsoft NSIS kurulumu"; s.tespit_notu = "kurulum paketi — VMProtect degil"; }
-        else if (pt.upx_gercek && dosyada_ara(p.veri, "UPX!", p.veri.size())) {
+        else if (pt.upx_gercek) {
             s.paketleyici = "UPX (bolum tablosu sikistirilmis)"; s.tespit_notu = "UPX! sihri"; }
         else if (pt.vurus) { s.paketleyici = pt.vurus->ad; s.tespit_notu = pt.vurus->not_; }
         else s.tespit_notu = "koruyucu bolum yok — PAKETSIZ / VMProtect degil";
@@ -539,7 +577,9 @@ static void analiz(const char* yol, Sonuc& s) {
             s.katman.cift_vmp_ad = true;
             s.katmanli = true;
         }
-    bool vmp_str = dosyada_ara(p.veri, "VMProtect", 1 << 20);
+    // v5: "VMProtect" dizgisi de bölge-kısıtlı (başlık damgası ya da koruyucu
+    // bölüm içi) — standart .rdata'daki geçmeler kanıt sayılmaz
+    bool vmp_str = dizgi_bolgede(p.veri, "VMProtect", korp);
     bool vmp_bayrak = false;
     for (auto* b : korp) {
         uint32_t oz = b->oz;

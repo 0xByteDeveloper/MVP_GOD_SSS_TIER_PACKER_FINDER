@@ -82,6 +82,15 @@ yalnız çıplak wrapper'da eşitlik sınıfı raporlanır (doğru cevap budur).
   bellek dökümünden sürüm atfı başarılı (ör. 32-bit DLL → "Lite 3.8.7,
   aile cipası birebir").
 
+## Kendi kendini tarama güvenliği (v5)
+
+Statik mingw binary'leri (bu dedektör dahil) çalışma zamanı kodunda `UPX!`
+ve `$Info: This file is packed with the UPX` sabitleri taşır; v4 bunları
+tam-dosya aramasıyla yanlış pozitif olarak raporluyordu. v5'te tüm paketleyici
+**dizgi imzaları bölge-kısıtlıdır**: yalnız ilk 0x1000 bayt (başlık damgası)
+veya standart-dışı bölümlerin verisi içinde geçerli sayılır. Kanıt:
+`vmpdet5_windows.exe` kendi tarayıcısıyla tarandığında "PAKETSIZ" çıkar.
+
 ## Çok katman
 
 Çift VMProtect koruması: iç 3.9.4 + dış 3.4.0 demosu
