@@ -93,9 +93,14 @@ görünüyorsa (ör. `.themida` + `.vmp0` + `.enigma1` + `UPX0` birlikte) → do
 obfusheader.h SAHTE İMZA MODU** olarak raporlanır; Themida/VMProtect/Enigma olarak DEĞİL.
 Hiçbir gerçek protector başka üreticinin bölümünü bırakmaz.
 
-**Test:** `ornekler/evren/sahte_demet.exe` (gerçek obfus.h kaynak mantığıyla üretilmiş demet)
-→ `EVREN: obfus.h / obfusheader.h (SAHTE IMZA MODU)` ✓
-`ornekler/evren/obfh.exe` → `obfus.h (DosX)` ✓
+**Testler:**
+- `ornekler/evren/sahte_demet.exe` (sentetik demet) → `EVREN: obfus.h / obfusheader.h (SAHTE IMZA MODU)` ✓
+- `ornekler/evren/obfh.exe` (sentetik .obfh) → `obfus.h (DosX)` ✓
+- **`ornekler/evren/obfusheader_fakesig_GERCEK.exe` — GERÇEK obfusheader.h DERLEMESİ** (zig cc çapraz
+  derleme, FAKE_SIGNATURES=1): çıktıda `.vmp0 .vmp1 .vmp2 .themida .enigma1 .enigma2 .arch .srdata
+  .xpdata .xtls .dsstext` bölümleri VAR — saf bir dedektör bunu VMProtect/Themida/Enigma sanırdı;
+  v6 motoru **SAHTE IMZA MODU** olarak doğru ayırdı ✓ (bölümler obfusheader.h:1874-1890'daki
+  FAKE_SIG listesiyle birebir)
 
 ---
 
@@ -205,6 +210,7 @@ Dizgi imzaları (bölge kısıtlı): `SecureEngine` (Themida motoru), `The Enigm
 | UPX gerçek örnekler (kaynaktan derlenen UPX 5.3.1-git, 11 varyant) | 11/11: sürüm+yöntem+seviye çözümlü |
 | Sahte imza demeti (obfus.h mantığı) | DEMET olarak doğru raporlandı (Themida/VMProtect/Enigma olarak değil) |
 | Aile testleri (es3n1n/Ryujin/Nocturne/TinyLoad/obfus.h/gerçek VMP bölümleri) | 7/7 PASS |
+| **GERÇEK obfusheader.h derlemesi** (zig cc, FAKE_SIGNATURES=1 — .vmp0/1/2+.themida+.enigma1/2 dolu) | **SAHTE DEMET olarak doğru** (VMProtect sanılmadı) |
 | PyInstaller cookie simülasyonu | python 312 + python312.dll + paket boyutu çözüldü |
 | Negatif kontroller (paketsiz Test_32/64, dedektör kendisi) | temiz |
 | Windows çapraz derleme (zig, x86_64-windows-gnu, statik) | `bin/vmpdet6_windows.exe` PE geçerli, tüm evren dizgileri gömülü |
