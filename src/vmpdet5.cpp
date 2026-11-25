@@ -44,6 +44,10 @@
 #include <set>
 #include <algorithm>
 
+// v6: universal packer/protector imza motoru (kaynak-koddan beslenen DB)
+#include "universal_db.h"
+#include "universal_tara.h"
+
 #ifdef _WIN32
 #include <io.h>
 #define ISATTU _isatty
@@ -64,6 +68,7 @@ namespace fs = std::filesystem;
 
 // ---------------------------------------------------------------- renkler
 static bool g_renk = true;
+static bool g_evren_detay = false;   // v6: --evren — tum evrensel kanitlari bas
 static const char* R(const char* k) { return g_renk ? k : ""; }
 #define SIFIRLA "\x1b[0m"
 #define SARI    "\x1b[33m"
@@ -395,6 +400,39 @@ static PackerTarama packer_tara(const PE& p, const std::vector<const Bolum*>& ko
     return pt;
 }
 
+// ---------------------------------------------------------------- v6: evrensel kopru
+// universal_tara.h motorunu vmpdet PE yapisina baglar:
+// koruyucu bolumlerin HAM VERI araliklarinda dizgi arama callback'i
+struct EvrenKopruBaglam {
+    const PE* p;
+    std::vector<std::pair<size_t, size_t>> araliklar;   // [bas, son)
+};
+
+static bool evren_korude_ara(const std::vector<uint8_t>& veri, const char* dizgi, void* bag) {
+    (void)veri;
+    EvrenKopruBaglam* bk = (EvrenKopruBaglam*)bag;
+    size_t n = strlen(dizgi);
+    for (auto& ar : bk->araliklar) {
+        size_t bas = ar.first, son = ar.second;
+        if (son > bk->p->veri.size()) son = bk->p->veri.size();
+        if (bas >= son || son - bas < n) continue;
+        for (size_t i = bas; i + n <= son; i++)
+            if (!memcmp(&bk->p->veri[i], dizgi, n)) return true;
+    }
+    return false;
+}
+
+static evren::EvrenTarama evren_tara_adapter(const PE& p, const std::vector<const Bolum*>& korp) {
+    EvrenKopruBaglam bk;
+    bk.p = &p;
+    for (auto* b : korp)
+        if (b->rsz > 0 && b->ro < p.veri.size())
+            bk.araliklar.push_back({b->ro, std::min<size_t>((size_t)b->ro + b->rsz, p.veri.size())});
+    return evren::tara<Bolum>(p.veri, p.bolumler,
+        [](const std::string& ad) { return standart_ad(ad); },
+        evren_korude_ara, &bk);
+}
+
 // ---------------------------------------------------------------- yapi siniflari
 enum SinifKod { S_PURE = 0, S_BIG1 = 1, S_SEC3 = 2, S_SEC2BIG = 3, S_SEC2K = 4, S_BILINMEYEN = 9 };
 static const char* const SINIF_ADLARI[] = {"PURE", "BIG1", "SEC3", "SEC2BIG", "SEC2K", "?"};
@@ -412,6 +450,14 @@ struct Sonuc {
     bool vmp_tespit = false;
     std::string tespit_notu;
     std::string paketleyici;
+    // v6: evrensel tarama sonuclari
+    bool evren_tespit = false;
+    bool evren_sahte_demet = false;
+    std::string evren_aile, evren_kategori, evren_kanit_seviyesi;
+    std::vector<std::string> evren_kanitlar;
+    std::vector<std::string> evren_sahte_bolumler;
+    std::string evren_upx_detay;      // "UPX 5.x / NRV2B_LE32 / seviye 8"
+    std::string evren_pyi_detay;      // "python 3.11 (python311.dll)"
     bool olumsuz_karar = false;
     std::string makine;
     int aile = -1;                     // v5: 0=T32E 1=T32D 2=T64E 3=T64D, -1=bilinmeyen
@@ -552,6 +598,57 @@ static void analiz(const char* yol, Sonuc& s) {
 
     // ---- [P] paketleyici taramasi
     PackerTarama pt = packer_tara(p, korp);
+
+    // ---- [U] v6 EVRENSEL TARAMA — kaynak-koddan beslenen imza DB'si
+    evren::EvrenTarama es = evren_tara_adapter(p, korp);
+    s.evren_tespit = es.tespit_edildi;
+    s.evren_sahte_demet = es.sahte_imza_demeti;
+    s.evren_aile = es.aile; s.evren_kategori = es.kategori;
+    s.evren_kanit_seviyesi = es.kanit_seviyesi;
+    for (auto& k : es.kanitlar) s.evren_kanitlar.push_back(k.metin);
+    s.evren_sahte_bolumler = es.sahte_bolumler;
+    if (!es.upx_surum.empty())
+        s.evren_upx_detay = es.upx_surum + std::string(" / ") + es.upx_yontem + " / seviye " + es.upx_seviye;
+    if (!es.pyi_surum.empty())
+        s.evren_pyi_detay = "python " + es.pyi_surum + (es.pyi_kutuphane.empty() ? "" : " (" + es.pyi_kutuphane + ")");
+
+    // ---- [U] SAHTE IMZA DEMETI — obfus.h/obfusheader.h sahteciligi: KESIN olumsuz
+    if (es.sahte_imza_demeti) {
+        s.olumsuz_karar = true;
+        s.paketleyici = "obfus.h / obfusheader.h (SAHTE IMZA MODU)";
+        s.tespit_notu = "baska ureticilerin bolum adlari sahte enjekte edilmis — FAKE_SIGNATURES";
+        s.katman.notlar.push_back("sahte bolumler: " + [&]{ std::string t; for (auto& b : es.sahte_bolumler) t += b + " "; return t; }());
+        return;
+    }
+
+    // ---- [U] evrensel aile kararlari (VMP harici — kesin olumsuz)
+    if (es.tespit_edildi && es.aile != "VMProtect") {
+        bool upx_bolum_izleri = s.upx_kamuflaj;   // UPX bolumleri ama sihir yok -> v5 kamuflaj mantigi islesin
+        if (es.aile == "UPX") {
+            // bolum eslesmesi YETERLI (UPX0+UPX1 en az 2) — gercek UPX
+            s.olumsuz_karar = true;
+            s.paketleyici = "UPX";
+            s.tespit_notu = es.upx_surum.empty() ? "UPX bolumleri (UPX0/UPX1/UPX2)"
+                          : es.upx_surum + " — yontem: " + es.upx_yontem;
+            s.katman.notlar.push_back("UPX altinda gizli ic katman olabilir — runtime analizi: --live");
+            for (auto* b : korp)
+                if (upx_bolum_ad_mi(b->ad) && b->vsz > 0x10000)
+                    s.katman.notlar.push_back("UPX0 genis — ic katman gizli (runtime analizi onerilir: --live)");
+            return;
+        }
+        if (es.aile.rfind("PyInstaller", 0) == 0) {
+            s.olumsuz_karar = true;
+            s.paketleyici = "PyInstaller";
+            s.tespit_notu = es.pyi_surum.empty() ? "EOF cookie (MEI sihri)" : "EOF cookie — " + s.evren_pyi_detay;
+            return;
+        }
+        // gerisi: kaynak-kanitli aileler (es3n1n, Ryujin, TinyLoad, Nocturne, ...)
+        s.olumsuz_karar = true;
+        s.paketleyici = es.aile;
+        s.tespit_notu = "evrensel imza (" + es.kanit_seviyesi + "): " +
+                        (es.kanitlar.empty() ? std::string("bolum adi") : es.kanitlar[0].metin);
+        return;
+    }
 
     if (s.kor.empty()) {
         s.olumsuz_karar = true;
@@ -1566,10 +1663,19 @@ static void rapor_plain(const char* yol, Sonuc& s) {
     printf("TARGET: %s\n", yol);
     printf("Arch: %s | Family: %s\n", s.makine.c_str(),
            s.aile >= 0 ? vmpdb::AILE_AD[s.aile] : "?");
+    // v6: evrensel packer satiri — VMP akisindan bagimsiz olarak goster
+    if (s.evren_tespit || s.evren_sahte_demet) {
+        printf("EVREN: %s [%s] kanit=%s\n", s.evren_aile.c_str(), s.evren_kategori.c_str(),
+               s.evren_kanit_seviyesi.c_str());
+        if (!s.evren_upx_detay.empty()) printf("EVREN-UPX: %s\n", s.evren_upx_detay.c_str());
+        if (!s.evren_pyi_detay.empty()) printf("EVREN-PYI: %s\n", s.evren_pyi_detay.c_str());
+        for (auto& sa : s.evren_sahte_bolumler) printf("EVREN-SAHTE-BOLUM: %s\n", sa.c_str());
+    }
     if (s.olumsuz_karar && !s.vmp_tespit) {
         printf("VMProtect: HAYIR (NEGATIF KARAR)\n");
         if (!s.paketleyici.empty()) printf("Packer: %s\n", s.paketleyici.c_str());
         printf("Kanit: %s\n", s.tespit_notu.c_str());
+        if (g_evren_detay) for (auto& k : s.evren_kanitlar) printf("  kanit: %s\n", k.c_str());
         return;
     }
     printf("VMProtect: %s (%s)\n", s.vmp_tespit ? "DETECTED" : "NO", s.tespit_notu.c_str());
@@ -1621,22 +1727,53 @@ static void rapor_json(const char* yol, Sonuc& s, FILE* out) {
     fprintf(out, "\",\n    \"vmp\": %s,\n", s.vmp_tespit ? "true" : "false");
     fprintf(out, "    \"arch\": \"%s\",\n", s.makine.c_str());
     fprintf(out, "    \"aile\": \"%s\",\n", s.aile >= 0 ? vmpdb::AILE_AD[s.aile] : "?");
+    // v6: evrensel alanlar + virgul mantigi (JSON gecerliligi)
+    const bool evren_var = (s.evren_tespit || s.evren_sahte_demet);
+    const bool devam_var = (!s.vmp_tespit) || (!s.adaylar.empty()) || evren_var;
     fprintf(out, "    \"kanit\": \"");
     json_kacis(out, s.tespit_notu.c_str());
-    fprintf(out, "\",\n");
+    fprintf(out, devam_var ? "\",\n" : "\"\n");
     if (!s.vmp_tespit) {
         fprintf(out, "    \"olumsuz_karar\": true,\n    \"paketleyici\": \"");
         json_kacis(out, s.paketleyici.c_str());
-        fprintf(out, "\"\n");
+        fprintf(out, evren_var ? "\",\n" : "\"\n");
+    }
+    if (evren_var) {
+        fprintf(out, "    \"evren\": {\n    \"aile\": \"");
+        json_kacis(out, s.evren_aile.c_str());
+        fprintf(out, "\",\n    \"kategori\": \"");
+        json_kacis(out, s.evren_kategori.c_str());
+        fprintf(out, "\",\n    \"kanit_seviyesi\": \"");
+        json_kacis(out, s.evren_kanit_seviyesi.c_str());
+        fprintf(out, "\",\n    \"sahte_imza_demeti\": %s,\n", s.evren_sahte_demet ? "true" : "false");
+        if (!s.evren_upx_detay.empty()) { fprintf(out, "    \"upx\": \""); json_kacis(out, s.evren_upx_detay.c_str()); fprintf(out, "\",\n"); }
+        else fprintf(out, "    \"upx\": \"\",\n");
+        if (!s.evren_pyi_detay.empty()) { fprintf(out, "    \"pyinstaller\": \""); json_kacis(out, s.evren_pyi_detay.c_str()); fprintf(out, "\",\n"); }
+        else fprintf(out, "    \"pyinstaller\": \"\",\n");
+        fprintf(out, "    \"kanitlar\": [");
+        for (size_t i = 0; i < s.evren_kanitlar.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_kanitlar[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "],\n    \"sahte_bolumler\": [");
+        for (size_t i = 0; i < s.evren_sahte_bolumler.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_sahte_bolumler[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "]\n    }\n");   // v6: virgulsuz kapanis (adaylar blogu gerekirse virgul ekler)
     }
     if (s.vmp_tespit && !s.adaylar.empty()) {
         if (s.esitlik_sinifi) {
-            fprintf(out, "    \"surum\": \"Professional 3.8.1 / Ultimate 3.8.4\",\n");
+            fprintf(out, "    %s\"surum\": \"Professional 3.8.1 / Ultimate 3.8.4\",\n", evren_var ? "," : "");
             fprintf(out, "    \"esitlik_sinifi\": true,\n");
             fprintf(out, "    \"esitlik_kapsami\": \"yalniz fn0 (seceneksiz saf-wrapper)\",\n");
         } else {
-            fprintf(out, "    \"surum\": \"%s\",\n    \"edition\": \"%s\",\n",
-                    vmpdb::SURUM[s.adaylar[0].surum], vmpdb::EDISYON[s.adaylar[0].surum]);
+            fprintf(out, "    %s\"surum\": \"%s\",\n    \"edition\": \"%s\",\n",
+                    evren_var ? "," : "", vmpdb::SURUM[s.adaylar[0].surum], vmpdb::EDISYON[s.adaylar[0].surum]);
             fprintf(out, "    \"esitlik_sinifi\": false,\n");
         }
         fprintf(out, "    \"bolum_adlari_degisti\": %s,\n", s.bolum_adlari_degisti ? "true" : "false");
@@ -1715,6 +1852,7 @@ int main(int argc, char** argv) {
         std::string a = argv[i];
         if (a == "--json" && i + 1 < argc) json_yol = argv[++i];
         else if (a == "--plain") plain = true;
+        else if (a == "--evren") { g_evren_detay = true; plain = true; }
         else if (a == "--no-color") g_renk = false;
         else if (a == "--dir" && i + 1 < argc) dizin_hedef_ekle(argv[++i], hedefler);
         else if (a == "--sim") { if (i + 1 < argc) sim_hedef = argv[++i]; }

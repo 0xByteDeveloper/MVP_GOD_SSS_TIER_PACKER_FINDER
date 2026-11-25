@@ -150,3 +150,11 @@ scripts/                 — korpus üretim hattı (DB'yi genişletmek için)
 docs/                    — bu dosya + test raporları
 ornekler/                — demo dosyaları
 ```
+
+---
+## v6 EVRENSEL MOD KULLANIMI
+- `vmpdet6 <dosya>`            — v5 akışı + evrensel packer kapısı (otomatik)
+- `vmpdet6 --evren <dosya>`    — tüm evrensel kanıt listesi (K1/K2/K3)
+- `vmpdet6 --evren --dir <kl>` — klasör taraması + kanıtlar
+- JSON: `"evren": { aile, kategori, kanit_seviyesi, sahte_imza_demeti, upx, pyinstaller, kanitlar[], sahte_bolumler[] }`
+- Evrensel kapı öncelik sırası: SAHTE DEMET > (VMP ailesi değil) aile kararı > v5 VMP akışı

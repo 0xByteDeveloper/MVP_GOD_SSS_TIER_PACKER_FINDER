@@ -1,10 +1,11 @@
-# ArastirmaList.md — Packer/Protector Araç Ekosistemi Araştırma Listesi (v2)
+# ArastirmaList.md — Packer/Protector Araç Ekosistemi Araştırma Listesi (v3)
 
 > **Amaç:** Listedeki HER packer için unpacker / devirtualizer / dumper / İAT-fixer / killer / deobfuscator repoları.
 > **Metod:** GitHub REST API (`search/repositories` + `repos` + kullanıcı/org taramaları) — **260+ sorgu, 160+ yazar/org profil taraması, web doğrulaması**; 7.476 benzersiz repo tarandı, derlenenler burada.
 > **Tüm yıldız sayıları ve tarihler API'den alınmıştır: 26.11.2026.** (Yıldızlar canlıdır, ~günlük değişir.)
 > Etiketler: **[UNPACK]** **[DEVIRT]** **[DUMP/İAT]** **[KILL]** **[DEOBF]** **[DETECT]** **[SRC]** **[ARAŞTIRMA]**
 > Packer envanteri (1 satır = 1 packer) → **[KnowedAlgorithm.md](KnowedAlgorithm.md)**
+> **v3 notu (kaynak-kod turu, 26.11.2026):** listedeki açık kaynak packer'ların KAYNAK REPOLARI toplandı (66 hedef) ve her birinden dedektörü besleyen deterministik izler çıkarıldı — bölüm adları, sihirli baytlar, kripto sabitleri, EOF cookie'ler (dosya:satır kanıtıyla): → **[docs/KaynakKodAnalizi.md](docs/KaynakKodAnalizi.md)**. UPX kaynaktan derlenip gerçek korpus paketlendi (11 varyant, sürüm/yöntem/seviye çözümlemesi doğrulandı).
 > Yasal not: araçlar yalnızca kendi yazılımlarınız / yetkili güvenlik araştırması içindir.
 
 ---

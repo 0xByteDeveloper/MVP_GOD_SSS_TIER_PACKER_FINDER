@@ -1,7 +1,17 @@
-# MVP GOD SSS TIER — VMProtect Packer Finder (v5)
+# MVP GOD SSS TIER — VMProtect Packer Finder (v6)
 
-**Deterministik VMProtect sürüm + özellik + katman dedektörü. Makine öğrenmesi YOK.**
+**Deterministik VMProtect sürüm + özellik + katman dedektörü + EVRENSEL packer motoru. Makine öğrenmesi YOK.**
 Tek dosyalık bağımlılıksız C++17 — Windows + Linux — **EXE ve DLL, 32-bit ve 64-bit**.
+
+## v6 — EVRENSEL MOTOR: kaynak koddan beslenen imza veritabanı
+
+Listemizdeki açık kaynak packer'ların **kendi kaynak kodlarından** çıkarılan deterministik
+izlerle (bölüm adları, sihirli baytlar, kripto sabitleri — dosya:satır kanıtı):
+**47 aile + 50 dizgi imzası + sahte-imza demeti kalkanı** (`src/universal_db.h`).
+UPX sürüm/yöntem/seviye çözümleme (packheader), PyInstaller EOF cookie (python sürümü),
+TinyLoad XXTEA anahtar bloğu, obfus.h FAKE_SIGNATURES sahtecilik tespiti.
+Detay: **[docs/KaynakKodAnalizi.md](docs/KaynakKodAnalizi.md)** — kanıt seviyeleri K1/K2/K3.
+Kullanım: `vmpdet6 --evren <dosya>` (tüm kanıt listesi) · `--json` (evren alanları).
 
 ```
  ██╗   ██╗███╗   ███╗██╗     ███████╗████████╗ ██████╗ ███████╗ ██████╗ ███████╗

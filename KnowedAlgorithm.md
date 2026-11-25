@@ -1,10 +1,11 @@
-# KnowedAlgorithm.md — Bilinen Packer / Protector / Obfuscator Envanteri (v2)
+# KnowedAlgorithm.md — Bilinen Packer / Protector / Obfuscator Envanteri (v3)
 
 > **Kural: 1 packer = 1 satır.**
 > Kaynak etiketleri: **[AÇIK]** resmî açık kaynak (linkli) · **[LEAKED]** sızdırılmış açık kaynak (linkli) · **[KAPALI]** kaynak kodu halka açık değil.
 > Yıldız sayıları ve tarihler GitHub REST API'sinden alınmıştır (26.11.2026). (Yıldızlar canlıdır, ~günlük değişir.)
 > Araç (unpacker/devirt/dumper/deobf/kill) listesi için → **[ArastirmaList.md](ArastirmaList.md)**
 > v2 notu: envanter ~60 → **150+ packer**'a çıkarıldı; Çin Android sağlamlaştırma ailesi, DRM/oyun zarfları, anti-cheat hattı, modern açık kaynak protector dalgası ve script-dili obfuscator'ları eklendi.
+> **v3 notu (kaynak-kod turu, 26.11.2026):** 66 hedefin KAYNAĞI indirilip analiz edildi (41 native packer + 9 ekosistem + 20 LLVM obfuscator pass'i + VMProtect 3.5.1 tam kaynak). Her açık kaynak packer'dan **deterministik iz çıkarıldı** (bölüm adları, sihirli baytlar, kripto sabitleri — dosya:satır kanıtıyla): → **[docs/KaynakKodAnalizi.md](docs/KaynakKodAnalizi.md)**. Bu izler `src/universal_db.h`'de motorun beslenmesi için kodlandı (K1/K2/K3 kanıt seviyeleri). Kritik bulgular: VMProtect 3.5.1'de bölüm adı RASTGELE üretilir (core.cc:3561); obfus.h/obfusheader.h başka protector'lerin bölümlerini SAHTE enjekte eder (FAKE_SIGNATURES) — dedektör artık bu sahteciliği DEMET olarak ayırt eder.
 
 ---
 
