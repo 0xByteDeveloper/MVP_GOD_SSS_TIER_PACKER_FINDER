@@ -1,7 +1,18 @@
-# MVP GOD SSS TIER — VMProtect Packer Finder (v7 IMMORTAL)
+# MVP GOD SSS TIER — VMProtect Packer Finder (v8 GOD STATE)
 
 **Deterministik VMProtect sürüm + özellik + katman dedektörü + EVRENSEL packer motoru. Makine öğrenmesi YOK.**
-Tek dosyalık bağımlılıksız C++17 — Windows + Linux — **EXE ve DLL, 32-bit ve 64-bit**.
+Tek dosyalık bağımsız C++17 — Windows + Linux — **EXE ve DLL, 32-bit ve 64-bit**.
+
+## v8 — GOD STATE: ~6.660 imza + İMZA ÖTESİ ALGORİTMALAR + Wine hattı
+
+| Kol | İçerik |
+|---|---|
+| **A16 "bizim lig"** | 25 dedektör deposu klonlandı: bintropy (IEEE 4140989), pypackerdetect (hexacorn 92 bölüm adı), Manalyze (**RICH header checksum doğrulaması**), PE-LiteScan, ObfusHunter/ObfusFake (sahtecilik tabloları), packerscope, DRMDetector, packpeek, Yara-Rules (7615 kural) |
+| **İmza ÖTESİ motor** | S9 bintropy entropi (blok 256B, eşik 6.677/7.199) · S10 yapısal 12 kural (EP-bölüm sınıfı, WX, vsz>>raw, overlay>7.5, RICH checksum, ithalat<10, dinamik-IAT, SuppressIldasm) · S11 obfus.h 17 desen · S12 DRM dizgileri |
+| **Wine hattı (K2)** | **Gerçek Themida 3.2.4.34 + Enigma 7.80 (2025) demo ile paketleme yapıldı** → 2025-2026 nesli EP desenleri ölçüldü; Enigma 7.8x'in bölüm adı temizliği (6-7/7 bölüm BOŞ isimli) keşfedildi |
+| **PackGenome RGD** | 483 gerçek çıktı — 14 aile **%100**; Themida 2.3.x int3-pop hilesi, ZProtect push-ret, MoleBox mingw-loader, .taggant DRM bölümü ölçüldü |
+| **DIE koşulları** | `isLibraryPresent` + `getSize` koşulları ayrıştırıldı (ROPacker = compareEP + zlib1.dll + >20MB) — MinGW öz-tarama yanlış pozitifi kapatıldı |
+| **Regresyon** | **310/310 VMP + 483/483 RGD + wine9 + öz-tarama = TOPLAM HATA: 0** |
 
 ## v7 — IMMORTAL: 4.500+ imza, HER PACKER'I ADIYLA SÖYLER
 

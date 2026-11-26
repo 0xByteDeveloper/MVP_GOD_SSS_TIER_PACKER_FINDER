@@ -434,6 +434,25 @@ static evren::EvrenTarama evren_tara_adapter(const PE& p, const std::vector<cons
     gi.cli_rva = p.veri_dizin[14][0];
     gi.cli_boy = p.veri_dizin[14][1];
     gi.makine64 = (p.makine == 0x8664);
+    // v8: yapisal motor girdileri
+    gi.e_lfanew = p.e_lfanew;
+    for (auto& imp : p.importlar) gi.ithalat_toplam += (uint32_t)imp.second;
+    gi.net_mscoree = false;
+    for (auto& f : p.import_fonksiyonlar) {
+        // kucuk-harf kopyasi uzerinde kontrol (MSCOREE.dll/mscoree.dll varyantlari)
+        std::string kucuk;
+        kucuk.resize(f.size());
+        for (size_t i = 0; i < f.size(); i++)
+            kucuk[i] = (f[i] >= 'A' && f[i] <= 'Z') ? (char)(f[i] + 32) : f[i];
+        if (kucuk.rfind("mscoree.dll!", 0) == 0 && kucuk.find("_corexemain") != std::string::npos) {
+            gi.net_mscoree = true;
+            break;
+        }
+    }
+    gi.kaynak_boy = p.veri_dizin[2][1];
+    gi.reloc_rva = p.veri_dizin[5][0];
+    gi.ithalat_fonksiyonlar = p.import_fonksiyonlar;
+    for (auto& imp : p.importlar) gi.ithalat_dll.push_back(imp.first);
     return evren::tara<Bolum>(p.veri, p.bolumler,
         [](const std::string& ad) { return standart_ad(ad); },
         evren_korude_ara, &bk, gi);
@@ -469,6 +488,14 @@ struct Sonuc {
     std::string evren_net_detay;      // ".NET: ConfuserEx 1.0.0 (+stream listesi)"
     std::string evren_themida_detay;  // "2.0.1.0-2.1.8.0" — Themida derin blogu
     std::vector<std::string> evren_ep_adaylar;  // ilk 8 EP adayi
+    // v8: GOD STATE yeni kanit turleri
+    std::string evren_entropi_detay;   // "dosya 7.41 | blok-ort 7.21 | en-yuksek 7.88 -> PAKETLENMIS"
+    std::vector<std::string> evren_yapisal;     // yapisal sezgisel bulgular (5 aractan)
+    std::vector<std::string> evren_obfus;       // obfus.h desen bulgulari (ObfusHunter)
+    std::vector<std::string> evren_drm;         // oyun DRM / protector dizgi izleri
+    std::vector<std::string> evren_atlas;       // bolum atlasi eslesmeleri (hexacorn+)
+    bool evren_rich_gecersiz = false;  // RICH header checksum uyusmazligi (Manalyze)
+    bool evren_obfus_sahte = false;    // obfus.h sahte imza filigrani (ObfusFake)
     // v7: EP imzasindan gelen aile — VMP kapisina birakilirse nihai raporda kullanilir
     std::string ep_bekleyen_aile, ep_bekleyen_not;
     bool olumsuz_karar = false;
@@ -653,6 +680,31 @@ static void analiz(const char* yol, Sonuc& s) {
     }
     if (!es.themida_surum.empty())
         s.evren_themida_detay = es.themida_surum;
+
+    // ---- [U] v8: GOD STATE kanitleri — Sonuc'a tasi
+    {
+        char t[224];
+        snprintf(t, sizeof t, "dosya %.3f | blok-ort %.3f | en-yuksek %.3f%s",
+                 es.ent_dosya, es.ent_ort, es.ent_en_yuksek,
+                 es.bintropy_packed ? " -> PAKETLENMIS (IEEE 4140989, bintropy)" : "");
+        s.evren_entropi_detay = t;
+        if (es.ent_ep_bolum >= 0.0) {
+            char t2[96];
+            snprintf(t2, sizeof t2, " | EP-bolumu %.3f", es.ent_ep_bolum);
+            s.evren_entropi_detay += t2;
+        }
+        if (es.ent_kuyruk >= 0.0 && es.kuyruk_boy) {
+            char t3[112];
+            snprintf(t3, sizeof t3, " | overlay %uB %.3f", es.kuyruk_boy, es.ent_kuyruk);
+            s.evren_entropi_detay += t3;
+        }
+    }
+    s.evren_yapisal = es.yapisal;
+    s.evren_obfus = es.obfus_bulgular;
+    s.evren_drm = es.drm_bulgular;
+    s.evren_atlas = es.bolum_atlasi;
+    s.evren_rich_gecersiz = es.rich_header_gecersiz;
+    s.evren_obfus_sahte = (es.obfus_sahte_imza || es.obfus_sahte_dongle);
 
     // ---- [U] SAHTE IMZA DEMETI — obfus.h/obfusheader.h sahteciligi: KESIN olumsuz
     if (es.sahte_imza_demeti) {
@@ -1738,6 +1790,19 @@ static void rapor_plain(const char* yol, Sonuc& s) {
         if (!s.evren_ep_detay.empty()) printf("EVREN-EP: %s\n", s.evren_ep_detay.c_str());
         if (!s.evren_net_detay.empty()) printf("EVREN-NET: %s\n", s.evren_net_detay.c_str());
         if (!s.evren_themida_detay.empty()) printf("EVREN-THEMIDA: %s\n", s.evren_themida_detay.c_str());
+        // v8 GOD STATE katmanlari
+        if (!s.evren_entropi_detay.empty()) printf("EVREN-ENTROPI: %s\n", s.evren_entropi_detay.c_str());
+        if (!s.evren_yapisal.empty()) printf("EVREN-YAPISAL: %zu bulgu\n", s.evren_yapisal.size());
+        if (!s.evren_obfus.empty()) printf("EVREN-OBFUS: %zu desen (ObfusHunter)\n", s.evren_obfus.size());
+        if (!s.evren_drm.empty()) printf("EVREN-DRM: %zu iz\n", s.evren_drm.size());
+        if (s.evren_rich_gecersiz) printf("EVREN-RICH: baslik checksum GECERSIZ — baslikla oynanmis (Manalyze)\n");
+        if (s.evren_obfus_sahte) printf("EVREN-OBFUS-SAHTE: obfus.h fake-protection filigrani bulundu\n");
+        if (g_evren_detay) {
+            for (auto& y : s.evren_yapisal) printf("  yapisal: %s\n", y.c_str());
+            for (auto& o : s.evren_obfus) printf("  obfus: %s\n", o.c_str());
+            for (auto& d : s.evren_drm) printf("  drm: %s\n", d.c_str());
+            for (auto& a : s.evren_atlas) printf("  atlas: %s\n", a.c_str());
+        }
         if (g_evren_detay)
             for (auto& ad : s.evren_ep_adaylar) printf("  EP aday: %s\n", ad.c_str());
         for (auto& sa : s.evren_sahte_bolumler) printf("EVREN-SAHTE-BOLUM: %s\n", sa.c_str());
@@ -1747,6 +1812,8 @@ static void rapor_plain(const char* yol, Sonuc& s) {
         if (!s.paketleyici.empty()) printf("Packer: %s\n", s.paketleyici.c_str());
         printf("Kanit: %s\n", s.tespit_notu.c_str());
         if (g_evren_detay) for (auto& k : s.evren_kanitlar) printf("  kanit: %s\n", k.c_str());
+        if (!s.evren_yapisal.empty()) { printf("Yapisal (%zu):\n", s.evren_yapisal.size()); for (auto& y : s.evren_yapisal) printf("  - %s\n", y.c_str()); }
+        if (!s.evren_obfus.empty()) { printf("Obfus desenleri (%zu):\n", s.evren_obfus.size()); for (auto& o : s.evren_obfus) printf("  - %s\n", o.c_str()); }
         return;
     }
     printf("VMProtect: %s (%s)\n", s.vmp_tespit ? "DETECTED" : "NO", s.tespit_notu.c_str());
@@ -1842,7 +1909,41 @@ static void rapor_json(const char* yol, Sonuc& s, FILE* out) {
             json_kacis(out, s.evren_sahte_bolumler[i].c_str());
             fprintf(out, "\"");
         }
-        fprintf(out, "]\n    }\n");   // v6: virgulsuz kapanis (adaylar blogu gerekirse virgul ekler)
+        // v8 GOD STATE alanlari
+        fprintf(out, "],\n    \"entropi\": \"");
+        json_kacis(out, s.evren_entropi_detay.c_str());
+        fprintf(out, "\",\n    \"yapisal\": [");
+        for (size_t i = 0; i < s.evren_yapisal.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_yapisal[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "],\n    \"obfus\": [");
+        for (size_t i = 0; i < s.evren_obfus.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_obfus[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "],\n    \"drm\": [");
+        for (size_t i = 0; i < s.evren_drm.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_drm[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "],\n    \"bolum_atlasi\": [");
+        for (size_t i = 0; i < s.evren_atlas.size(); i++) {
+            if (i) fprintf(out, ", ");
+            fprintf(out, "\"");
+            json_kacis(out, s.evren_atlas[i].c_str());
+            fprintf(out, "\"");
+        }
+        fprintf(out, "],\n    \"rich_gecersiz\": %s,\n    \"obfus_sahte_imza\": %s\n",
+                s.evren_rich_gecersiz ? "true" : "false",
+                s.evren_obfus_sahte ? "true" : "false");
+        fprintf(out, "    }\n");   // v6: virgulsuz kapanis (adaylar blogu gerekirse virgul ekler)
     }
     if (s.vmp_tespit && !s.adaylar.empty()) {
         if (s.esitlik_sinifi) {

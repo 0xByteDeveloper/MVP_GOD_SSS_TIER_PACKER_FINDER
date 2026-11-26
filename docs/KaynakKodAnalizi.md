@@ -379,3 +379,105 @@ ornekler/evren/net_*.exe — 3 .NET sentetik test (ConfuserEx/Babel/Reactor)
   PyArmor, PyInstaller (python sürümü), Nuitka, es3n1n, Ryujin, Nocturne, wVmp,
   obfus.h/obfusheader.h (sahte-imza demeti), KiteShield (ELF), zhidun (APK)
 - **Kurulum/SFX**: NSIS, Inno Setup, WinRAR/7z/zip SFX
+
+
+---
+
+## v8.0) GOD STATE — imza ÖTESİ algoritmalar + A16 "bizim lig" + Wine hattı
+
+**v8'in üç kolu:** (1) A16 bölümündeki TÜM dedektör/imza-DB ekosistemi kaynak alındı;
+(2) imza yeterli değil — 5 aracın ALGORİTMASI motora gömüldü (entropi/yapısal/RICH);
+(3) Wine hattı kuruldu: **gerçek Themida 3.2.4.34 ve Enigma 7.80 demo'larıyla paketleme
+yapıldı**, çıktılardan yeni nesil (2025-2026) EP desenleri ölçüldü.
+
+### v8.1) A16 "bizim lig" — klonlanan 25 dedektör deposu
+
+| Araç | Katkı (motora giren kısım) |
+|---|---|
+| **packing-box/bintropy** (IEEE 4140989) | S9 BINTROPY motoru: 256-bayt blok Shannon entropisi, yarı-sıfır blok yok sayma, eşikler **ort≥6.677 / en-yüksek≥7.199** (THRESHOLDS'tan) |
+| **packing-box/pypackerdetect** | S10 EP-bölüm sınıflandırması (acceptable/.text, alternative, Delphi BSS→CODE, sürücü INIT), ithalat<10, standart-dışı bölüm, **hexacorn 92 bölüm-adı → packer atfı** (packers.json) |
+| **JusticeRage/Manalyze** (325 satırlık plugin) | S10: bölüm entropisi>7, WX bölümler, kaynaklar>dosya, **RICH header checksum doğrulaması** (DanS ofseti + rol32 DOS-stub toplamı + @comp.id — pe.cpp:1721-1790'dan portlandı), ithalat tutarlılığı |
+| **DosX-dev/PE-LiteScan** | S10: EP son bölümde (LAST_SECTION_ENTRYPOINT), .text yokluğu, overlay entropisi>7.5 (STRANGE_OVERLAY), PUSHAD@EP, standart-dışı DOS stub, SuppressIldasmAttribute (.NET), WEIRD bölüm adları, KnownSections (≈70 ad, sürümlü) |
+| **hACKCASCAC/ObfusHunter** | S11 OBFUS bloğu: 17 desen (junk code BREAK_STACK*, anti-debug AD_*, VM dispatch, obfh veri bloğu 00-09) |
+| **hACKCASCAC/ObfusFake-Signatures-Remover** | S2/S11 sahtecilik tabloları: sahte .vmp0/.enigma1/UPX0 bölüm adları (23), sahte filigran desenleri (Enigma v\x01 / denuvo_atd / NUITKA / SCREEN2EXE), sahte dongle dizgileri (skeydrv.dll, HASPDOSDRV, WIBUKEY, \\.\WIZZKEYRL — Sentinel/HASP/WIBU taklidi) |
+| **salmanmallah/packerscope** | S10 EP stub desenleri (PUSHAD/PUSHFD/CALL$+5/UPX x64), SUSPICIOUS_APIS kümesi, IAT dinamik-yükleme analizi |
+| **iaski15/DRMDetector** | S12 DRM dizgi taraması: Denuvo/Arxan/SteamStub/steam_api/Obsidium/CodeVeil |
+| **cognis-digital/packpeek** | PDATA000→Armadillo; entropi eşiği 7.2 referansı |
+| **Yara-Rules/rules** (peid.yar — 11 kaynak birleşimi) | **7615 kural → 8424 desen**; 299'u userdb'lerde olmayan özgün desen (AlienVault panda/jclausing/exeinfope, eppackersigs, epcompilersigs, cuckoo) |
+| **packing-box/peid + wolfram77web/app-peid + pypackerdetect db + packerscope db** | 4 PEiD userDB'si → peid_db.h çekirdeği (v7 DIE peid_rules ile birleşik) |
+| **ExeinfoASL** (resmî depo) | PEiD 0.95 kaynak kodu + SignMaker64 — kurulum imzası ekosistemi dokümante edildi |
+| packgenome/PackGenome-Artifacts | **1.474 gerçek packer çıktısı** (NDSS dataset) — regresyon korpusu + MODERN_EP ölçümleri (aşağıda) |
+| horsicq/DIE-engine | die_db.h yeniden üretiminde koşul ayrıştırıcı (aşağıda) |
+| Nukem9/SwissArmyKnife, Manalyze binutils, 0pc0deFR/YaraRules, RootVandal/assay, GHFear/Packernoculars, ShadowGuard-AI, anpa1200/Unpacker, mesaleh/PackiD | İncelendi; eldeki tablolarla örtüştü (özgün desen katkısı 0 — dedup) |
+
+### v8.2) İmza hacmi — v7 → v8
+
+| Tablo | v7 | v8 |
+|---|---|---|
+| PEiD EP imzaları | 2768 | **4787** (+2019) |
+| PEiD tam-tarama | 382 | **450** |
+| DIE EP | 1287 | **1173** (yeniden üretim: koşullu) |
+| Bölüm-adı atlası | 90 (DIE) | **90 + 130** (hexacorn+PE-LiteScan+Manalyze+packpeek) |
+| Obfus/EP-stub/DRM/sahte desen | ~20 | **66** (algoritma_db.h) |
+| MODERN_EP (gerçek çıktı ölçümü) | 0 | **11** |
+| **TOPLAM** | ~4550 | **~6660** |
+
+### v8.3) WINE HATTI — gerçek Themida/Enigma ile paketleme (K2 kanıt sınıfı)
+
+qemu-i386 → wine32 (Kron4ek 11.20 x86) → PE32 CLI zinciri kuruldu
+(`wine-32bit-runner` metodu; i386 X11 kütüphaneleri eklendi — GUI de çalışıyor).
+
+| Ürün | Sürüm | Yöntem | Çıktı | Ölçülen imza |
+|---|---|---|---|---|
+| **Themida** (demo) | 3.2.4.34 x86/x64 | `Themida.exe /protect proje.tmd /inputfile /outputfile` (yardım CHM: hm_protecting-through-the-command.htm; .tmd = INI metni — PackGenome v3.0.4 tiger32_red projesi kalıbı) | `gercek_themida_324_32.exe` (1.38 MB) + `_64.exe` (1.51 MB) | PEiD "Themida/WL 3.0.x" EP; **.themida** bölümü doğrulandı |
+| **Enigma Protector** (demo) | 7.80 build 20250205 | `enigma32.exe temel.enigma -input -output` (innoextract ile .deb'siz kurulum: enigma_ext/app) | `gercek_enigma_780_32.exe` (1.2 MB) + `_64.exe` (2.0 MB) | **YENİ NESİL EP desenleri**: x86 `eb08`+8joker+`60e8000000005d81ed`+imm32×2+`e9`; x64 `eb08`+8joker+`50..4157`+`489c`+`sub rsp,8`+`fxsave64` — **7 bölümün 6-7'si BOŞ isimli** (klasik .enigma1/.enigma2 YOK — 2025 sürümü bölüm adlarını TEMİZLEDİ) |
+
+**Wine hattının yakaladığı deliği v8 kapattı:** klasik sözlükler Enigma 7.8x'i
+"BİLİNMEYEN KORUYUCU" sanıyordu. Ölçülen EP desenleri (K1: gerçek çıktı) MODERN_EP
+tablosuna girdi; artık `Packer: Enigma Protector 7.8x [MODERN(Wine)]`.
+
+### v8.4) PackGenome RGD — 483 gerçek çıktılı yeni korpus + MODERN_EP ölçümleri
+
+14 aile × gerçek dosyalar (NDSS PackGenome dataset). İlk koşuda 6 aile 0-21%'di;
+aşağıdaki desenler ÖLÇÜLEREK (EP baytları hex olarak okunarak) eklendi:
+
+| Aile | Ölçülen EP deseni (MODERN_EP) | Kapanan varyant |
+|---|---|---|
+| Themida/WinLicense 2.3.x | `565053e801000000cc5889c3402d` (push×3; call; **int3;pop** — anti-debug int3 hilesi) | delphi_bcb + 9 WinLicense modu |
+| Themida/WinLicense 2.3.x | `eb08`+8joker+`e900200000` (jmp 0x200000 sabiti) | full/ENCODE (rastgele bölüm adları + **.taggant** DRM bölümü bulundu) |
+| ZProtect 1.6 | `68..c3410068..c34100c3` / d341 / jmp türevleri (push-ret 0x41c3xx) | 6 modun tamamı |
+| MoleBox 4.3 | `5589e583ec08c7042401000000ff15....e8....908db42600000000` (mov [esp],1; call [imm]; **nop; lea esi,[esi+0]** — mingw loader) | 3 modun tamamı |
+| Enigma 1.55 | `558bec83c4f0b8........e8010000009a83c4108be55de9` (**9a farcall** — 32-bit kodda anormal) | best_compress |
+
+Yeni bölüm atlası girdileri: **.taggant** → Themida/WinLicense (Taggant DRM bölümü),
+**PDATA000/001** → Armadillo (packpeek).
+
+### v8.5) DIE koşul ayrıştırıcısı (v8'in kritik düzeltmesi)
+
+`packer_ROPacker.2.sg` aslında ÜÇ koşullu: `compareEP(...)` **VE** `isLibraryPresent("zlib1.dll")`
+**VE** `getSize() > 20MB`. v7 çıkarımı yalnız compareEP'i almıştı → **MinGW x64 başlangıç
+kodu ROPacker sanılıyordu** (vmpdet8_windows.exe öz-taraması yanlış pozitif verdi).
+v8 die_db.h yeniden üretildi: her EP imzasına `kutuphane` + `min_boyut` alanları eklendi;
+motor koşulları uygular. Öz-tarama artık temiz (Linux + MinGW Windows binary).
+
+### v8.6) v8 regresyonu (docs/kor_test_v8.txt — TOPLAM HATA: 0)
+
+| Küme | Sonuç |
+|---|---|
+| VMProtect 310 korpusu (exe+dll, adlar gizli) | **310/310 — %100** |
+| Örnekler + evren/ (bilinen kararlar) | 19+15 dosya — **0 hata** |
+| wine9/ (gerçek Themida 3.2.4 + Enigma 7.80 + girdiler) | 6 dosya — **0 hata** |
+| PackGenome RGD 14 aile | **483/483 — %100** (ACProtect 42, ASPack 45, Enigma 53, Fsg 3, MoleBox 9, Obsidium 21, Themida 42, UPX 111, VMProtect 27, WinLicense 27, ZProtect 18, kkrunchy 9, NsPack 27, Petite 15) |
+| Öz-tarama (Linux + MinGW Windows) | **temiz** |
+
+### v8.7) v8'e eşlik eden dosyalar
+
+- `src/peid_db.h` — 4787+450 (10 sözlük birleşimi; üretici: scripts/v8_uret.py)
+- `src/bolum_db.h` — 130 gerçek + 23 obfus-sahte bölüm adı
+- `src/algoritma_db.h` — OBFUS 17 + SAHTE 4 + SAHTE_DONGLE 12 + EP_STUB 8 + DRM 25 + MODERN_EP 11
+- `src/die_db.h` — 1173 EP (kutuphane/min_boyut koşullu) + 45 içerik + 90 ad
+- `src/universal_tara.h` v8 — S0..S12 (yeni: S1b bölüm atlası, S4b MODERN EP, S9 bintropy, S10 yapısal 12 kural, S11 obfus derin, S12 DRM)
+- `src/vmpdet5.cpp` — Girdi bağlamı v8 (e_lfanew/ithalat/kaynak/DLL listesi); JSON+TUI'ye 6 yeni kanıt türü
+- `bin/vmpdet8_linux` + `bin/vmpdet8_windows.exe` (MinGW-w64 14.2, statik)
+- `ornekler/wine9/` — 4 gerçek korumalı çıktı + 2 paketsiz girdi + Themida .tmd projesi
+- `scripts/v8_uret.py` (üretici), `scripts/kor_test_v8.py` (regresyon)

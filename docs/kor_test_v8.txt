@@ -1,0 +1,62 @@
+# v8 GOD STATE REGRESYON RAPORU — 2026-11-26T00:21:49
+
+1) VMProtect 310 korpusu (exe+dll): 310/310 tespit (100.0%)
+2) Test_64_paketsiz.exe: vmp=False evren='' paket='' OK
+2) cift_vmp_340_340.exe: vmp=True evren='VMProtect' paket='' OK
+2) cift_vmp_340ic_394dis.exe: vmp=True evren='VMProtect' paket='' OK
+2) cift_vmp_394ic_340dis_v5.exe: vmp=True evren='VMProtect' paket='' OK
+2) cift_vmp_hello.exe: vmp=True evren='VMProtect' paket='' OK
+2) gercek_UPX.exe: vmp=False evren='UPX' paket='UPX' OK
+2) hello_paketsiz.exe: vmp=False evren='' paket='' OK
+2) korumasiz_Test_32.dll: vmp=False evren='' paket='' OK
+2) korumasiz_Test_64.exe: vmp=False evren='' paket='' OK
+2) themida_izi_sentetik.exe: vmp=False evren='Themida / WinLicense (Oreans)' paket='Themida / WinLicense (Oreans)' OK
+2) uclu_upx_vmp_vmp.exe: vmp=False evren='UPX' paket='UPX' OK
+2) upx_dis_vmp_ic.exe: vmp=False evren='UPX' paket='UPX' OK
+2) vmp309_T32E_Move_Virt.exe: vmp=True evren='VMProtect' paket='' OK
+2) vmp387_T32D_Move_Mutation.dll: vmp=True evren='VMProtect' paket='' OK
+2) vmp394_T32E_fn0.exe: vmp=True evren='VMProtect' paket='' OK
+2) vmp396_T64D_fn0.dll: vmp=True evren='VMProtect' paket='' OK
+2) vmp_340_adlar_degisti.exe: vmp=True evren='' paket='' OK
+2) vmp_394_hello.exe: vmp=True evren='VMProtect' paket='' OK
+2) vmp_ult_309_fn0.exe: vmp=True evren='VMProtect' paket='' OK
+2) vmp_ult_340_fn0.exe: vmp=True evren='VMProtect' paket='' OK
+2e) es3n1n.exe: evren='es3n1n/obfuscator' paket='es3n1n/obfuscator' OK
+2e) gercek_vmp_bolum.exe: evren='VMProtect' paket='' OK
+2e) net_babel_sentetik.exe: evren='Babel .NET' paket='Babel .NET' OK
+2e) net_confuserex_sentetik.exe: evren='ConfuserEx (.NET) 9.9.9' paket='ConfuserEx (.NET) 9.9.9' OK
+2e) net_reactor_sentetik.exe: evren='.NET Reactor' paket='.NET Reactor' OK
+2e) nocturne.exe: evren='Nocturne' paket='Nocturne' OK
+2e) obfh.exe: evren='obfus.h (DosX)' paket='obfus.h (DosX)' OK
+2e) obfusheader_fakesig_GERCEK.exe: evren='obfus.h / obfusheader.h (SAHTE IMZA MODU)' paket='obfus.h / obfusheader.h (SAHTE IMZA MODU)' OK
+2e) pyinstaller_cookie_sim.exe: evren='PyInstaller' paket='PyInstaller' OK
+2e) ryujin.exe: evren='Ryujin Protector' paket='Ryujin Protector' OK
+2e) sahte_demet.exe: evren='obfus.h / obfusheader.h (SAHTE IMZA MODU)' paket='obfus.h / obfusheader.h (SAHTE IMZA MODU)' OK
+2e) tinyload.exe: evren='TinyLoad' paket='TinyLoad' OK
+2e) upx531_best_win32.exe: evren='UPX' paket='UPX' OK
+2e) upx531_lzma_win64.exe: evren='UPX' paket='UPX' OK
+2e) upx531_nrv2b_win32.exe: evren='UPX' paket='UPX' OK
+4w) gercek_enigma_780_32.exe: evren='Enigma Protector' ep='Enigma Protector 7.8x [MODERN(Wine)]' OK
+4w) gercek_enigma_780_64.exe: evren='Enigma Protector' ep='Enigma Protector 7.8x [MODERN(Wine)]' OK
+4w) gercek_themida_324_32.exe: evren='Themida / WinLicense (Oreans)' ep='Themida / Winlicense 3.0.x [PEiD]' OK
+4w) gercek_themida_324_64.exe: evren='Themida / WinLicense (Oreans)' ep='x64 Themida / Winlicense 3.0.x.0 [PEiD]' OK
+4w) girdi_test32_paketsiz.exe: evren='' ep='' OK
+4w) girdi_test64_paketsiz.exe: evren='' ep='' OK
+3) RGD ACProtect: 42/42 (100.0%) — kacan: 0
+3) RGD ASPack: 45/45 (100.0%) — kacan: 0
+3) RGD Enigma: 53/53 (100.0%) — kacan: 0
+3) RGD Fsg: 3/3 (100.0%) — kacan: 0
+3) RGD MoleBox: 9/9 (100.0%) — kacan: 0
+3) RGD Obsidium: 21/21 (100.0%) — kacan: 0
+3) RGD Themida: 42/42 (100.0%) — kacan: 0
+3) RGD Upx: 111/111 (100.0%) — kacan: 0
+3) RGD VMProtect: 27/27 (100.0%) — kacan: 0
+3) RGD WinLicense: 27/27 (100.0%) — kacan: 0
+3) RGD ZProtect: 18/18 (100.0%) — kacan: 0
+3) RGD kkrunchy: 9/9 (100.0%) — kacan: 0
+3) RGD nspack: 27/27 (100.0%) — kacan: 0
+3) RGD petite: 15/15 (100.0%) — kacan: 0
+5) oz-tarama (vmpdet8_linux kendisi): vmp=False evren='' OK
+
+HATALAR (0):
+

@@ -1,40 +1,56 @@
 // ============================================================================
-// universal_tara.h — UNIVERSAL PACKER TARAMA MOTORU v7 (IMMORTAL)
+// universal_tara.h — UNIVERSAL PACKER TARAMA MOTORU v8 (GOD STATE)
 // ============================================================================
-// Girdi: universal_db.h (K1/K2/K3 imza DB) + peid_db.h (2771+385 PEiD imzasi,
-// otomatik uretim) + die_db.h (1292 EP + 42 bolum-icerik + 90 bolum-adi,
-// Detect-It-Easy kurallarindan otomatik uretim).
+// Girdi: universal_db.h (K1/K2/K3 imza DB) + peid_db.h (4787 EP + 450 tam
+// tarama imzasi; 10 kaynak sozlugu birlesimi) + die_db.h (1287 EP + 42
+// bolum-icerik + 90 bolum-adi) + bolum_db.h (129 packer bolum adi + 23 obfus
+// sahtesi) + algoritma_db.h (obfus desenleri + sahte imza + EP stub + DRM).
 //
-// v7 KATMANLARI:
-//   S0  .NET CLI metadata motoru (BSJB kok, stream dizini, #Strings/#US yigin
-//       taramasi) — ConfuserEx/KoiVM/Reactor/Agile.NET/Babel/Dotfuscator/
-//       SmartAssembly/Spices/Goliath/MaxtoCode/DNGuard/ILProtector/Xenocode/
-//       CodeVeil... + ConfuserEx surum su damgasi cozumleme
-//   S1  bolum-adi aile eslesmesi (v6, korunur) + DIE bolum-adi destek kaniti
-//   S2  sahte-imza demeti kalkani (obfus.h FAKE_SIGNATURES)
-//   S3  bolge-kisitli dizgi imzalari (v6, korunur)
-//   S4  GIRIS NOKTASI (EP) bayt-imza motoru — PEiD 2771 + DIE 1292 desen,
-//       nibble-joker destekli, en-kesin-desen kazanir; PEiD adi surum tasir
-//   S5  tam-tarama imzalari (PEiD 385) — YALNIZ EP-bolumu + standart-disi
-//       bolumlerin ilk/son parcalarinda aranir (yanlis pozitif korumasi)
-//   S6  ozel bloklar: TinyLoad XXTEA, UPX packheader, PyInstaller cookie
-//   S7  THEMIDA DERIN BLOGU — DIE EP imzalarindan surum haritasi (1.0→2.1),
-//       x64→3.x kurali (K1: Magicmida Themida64.pas:63 "V2 is not supported")
-//   S8  nihai aile karari — oncelik: sahte-demet > bolum-ailesi > .NET >
-//       EP-ailesi (>=6 kesin bayt) > dizgi-ailesi
+// v8 KATMANLARI (v7'nin tamami korunur):
+//   S0   .NET CLI metadata motoru (v7)
+//   S1   bolum-adi aile eslesmesi (v6) + DIE bolum-adi + BOLUM ATLASI (v8:
+//        hexacorn 92 + PE-LiteScan ~70 surumli + Manalyze + packpeek)
+//   S2   sahte-imza demeti kalkani (v6) + obfus SAHTE bolum adi tablosu (v8)
+//   S3   bolge-kisitli dizgi imzalari (v6)
+//   S4   EP bayt-imza motoru — PEiD 4787 + DIE 1287 (v8: 2.4k yeni imza)
+//   S5   tam-tarama imzalari — sinirli bolge (v7)
+//   S6   ozel bloklar: TinyLoad XXTEA, UPX packheader, PyInstaller (v7)
+//   S7   THEMIDA derin blogu (v7)
+//   S8   nihai aile karari (v7) — v8: yeni kanit turleri baglanir
+//   S9   BINTROPY ENTROPI MOTORU (v8 YENI) — IEEE 4140989: 256-bayt blok
+//        Shannon entropisi, yari-sifir bloklar yok sayilir; esikler
+//        ort>=6.677 en-yuksek>=7.199 (packing-box/bintropy THRESHOLD'leri);
+//        dosya-geneli + bolum-bazli + kuyruk(overlay) analizi
+//   S10  YAPISAL SEZGISEL MOTOR (v8 YENI) — 5 aractan birlesik algoritma:
+//        pypackerdetect (EP-bolum siniflandirmasi: acceptable/delphi/driver/
+//        alternative, ithalat<10, standart-disi bolum>=3), Manalyze (bolum
+//        entropisi>7, WX bolumler, kaynaklar>dosya, RICH header checksum
+//        dogrulamasi + @comp.id ithalat tutarliligi), PE-LiteScan (EP son
+//        bolumde, .text yoksa, kuyruk entropisi>7.5, PUSHAD@EP, ozel DOS
+//        stub, ithalat tablosu yoksa, garip bolum adlari), packerscope (EP
+//        stub desenleri, SUSPICIOUS_APIS kumesi), PE-LiteScan KnownSections
+//   S11  OBFUS.H DERIN BLOGU (v8 YENI) — ObfusHunter 17 deseni (junk code,
+//        anti-debug, VM dispatch, obfh veri blogu) + ObfusFake sahte imza
+//        desenleri (Enigma/Denuvo/Nuitka/Screen2EXE) + sahte dongle dizgileri
+//   S12  OYUN DRM / TICARI PROTECTOR DIZGILERI (v8 YENI) — DRMDetector
+//        listesi: Denuvo/Arxan/SteamStub/... dosya-geneli tarama
 //
 // GUVENLIK: dedektorun KENDI binary'si temiz gecmelidir; tum aramalar bolge
-// kisitli; EP imzalari yalniz GIRIS NOKTASI ofsetinde eslesir.
+// kisitli; EP imzalari yalniz GIRIS NOKTASI ofsetinde eslesir; entropi ve
+// yapisal bulgular KANIT uretir, asil aile karari imza/bolum kaynaklidir.
 // ============================================================================
 #pragma once
 #include <string>
 #include <vector>
 #include <cstring>
 #include <cstdint>
+#include <cmath>
 #include <algorithm>
 #include "universal_db.h"
 #include "peid_db.h"
 #include "die_db.h"
+#include "bolum_db.h"
+#include "algoritma_db.h"
 
 // ---- vmpdet5.cpp'den beklenen tipler (one-definition: burada sadece imzalar)
 // struct Bolum { std::string ad; uint32_t vsz, va, rsz, ro, oz; };
@@ -50,6 +66,14 @@ struct Girdi {
     uint32_t cli_rva = 0;        // veri_dizin[14][0] (.NET CLI basligi)
     uint32_t cli_boy = 0;        // veri_dizin[14][1]
     bool makine64 = false;       // AMD64
+    // ---- v8 eklentileri
+    uint32_t e_lfanew = 0;                 // DOS->PE gecis ofseti (RICH kontrolu)
+    uint32_t ithalat_toplam = 0;           // toplam ithal edilen fonksiyon
+    bool net_mscoree = false;              // mscoree.dll!_CorExeMain (.NET muafiyeti)
+    uint32_t kaynak_boy = 0;               // kaynak toplam boyu (veri_dizin[2][1])
+    uint32_t reloc_rva = 0;                // veri_dizin[5][0]
+    std::vector<std::string> ithalat_fonksiyonlar; // "dll!func" (sinirli)
+    std::vector<std::string> ithalat_dll;         // ithal edilen DLL ADLARI (DIE kosullari)
 };
 
 struct EvrenTarama {
@@ -73,6 +97,26 @@ struct EvrenTarama {
     std::string themida_surum;                // Themida derin blogu
     bool ep_kararli = false;                  // v7: aile karari EP imzasindan mi geldi?
     bool tespit_edildi = false;
+    // ---- v8: entropi motoru (S9)
+    double ent_dosya = 0.0;                   // dosya-geneli Shannon entropisi
+    double ent_ort = 0.0;                     // bintropy blok-ortalamasi (256B)
+    double ent_en_yuksek = 0.0;               // bintropy en-yuksek blok
+    bool bintropy_packed = false;             // IEEE 4140989 karari
+    double ent_ep_bolum = -1.0;               // EP bolumu entropisi (-1 = yok)
+    double ent_kuyruk = -1.0;                 // overlay/kuyruk entropisi
+    uint32_t kuyruk_boy = 0;                  // overlay boyu
+    // ---- v8: yapisal bulgular (S10)
+    std::vector<std::string> yapisal;         // yapisal sezgisel bulgular
+    bool rich_header_gecersiz = false;        // RICH checksum uyusmazligi
+    int ithalat_sayisi = -1;                  // -1 = hesaplanmadi
+    // ---- v8: obfus derin bulgular (S11)
+    std::vector<std::string> obfus_bulgular;  // ObfusHunter desen vuruslari
+    bool obfus_sahte_imza = false;            // ObfusFake deseni bulundu
+    bool obfus_sahte_dongle = false;          // sahte dongle dizgisi bulundu
+    // ---- v8: DRM bulgulari (S12)
+    std::vector<std::string> drm_bulgular;    // DRMDetector dizgi vuruslari
+    // ---- v8: bolum atlasi (S1 genisletme)
+    std::vector<std::string> bolum_atlasi;    // bolumdb eslesmeleri
 };
 
 // ---------- yardimcilar ----------
@@ -104,6 +148,66 @@ inline uint32_t rva_ofset(const std::vector<BolumTipi>& bolumler, uint32_t rva) 
         if (rva >= b.va && rva < b.va + (b.vsz ? b.vsz : b.rsz))
             return b.ro + (rva - b.va);
     return 0;
+}
+
+// v8: DIE kosulu — ithal DLL listesinde bu kutuphane var mi? (buyuk/kucuk harf duyarsiz)
+inline bool girdi_kutuphane_var(const std::vector<std::string>& dller, const char* hedef) {
+    if (!hedef || !hedef[0]) return true;
+    size_t n = strlen(hedef);
+    for (auto& d : dller) {
+        if (d.size() != n) continue;
+        bool tamam = true;
+        for (size_t i = 0; i < n; i++) {
+            char a = d[i] >= 'A' && d[i] <= 'Z' ? d[i] + 32 : d[i];
+            char b = hedef[i] >= 'A' && hedef[i] <= 'Z' ? hedef[i] + 32 : hedef[i];
+            if (a != b) { tamam = false; break; }
+        }
+        if (tamam) return true;
+    }
+    return false;
+}
+
+// ---------- v8: rol32 + Shannon entropi yardimcilari ----------
+inline uint32_t rol32_v8(uint32_t x, uint32_t n) {
+    n = n % 32;
+    return (x << n) | (x >> (-n & 31));
+}
+
+// Shannon entropisi [0..8] — bintropy/packerscope ile ayni formül
+inline double shannon_entropi(const uint8_t* v, size_t n) {
+    if (n <= 1) return 0.0;
+    uint32_t freq[256] = {0};
+    for (size_t i = 0; i < n; i++) freq[v[i]]++;
+    double h = 0.0;
+    for (int b = 0; b < 256; b++) {
+        if (!freq[b]) continue;
+        double p = (double)freq[b] / (double)n;
+        h -= p * (log(p) / log(2.0));
+    }
+    return h;
+}
+
+// bintropy blok entropisi (IEEE 4140989): 256-bayt bloklar; yari-sifir bloklar
+// yok sayilir; (blok entropileri, ortalama) doner — packing-box/bintropy bintropy()
+inline void bintropy_bloklar(const uint8_t* v, size_t n, size_t blok = 256,
+                              std::vector<double>* cikti = nullptr,
+                              double* ortalama = nullptr) {
+    std::vector<double> ent;
+    size_t say = 0;
+    double top = 0.0;
+    for (size_t i = 0; i < n; i += blok) {
+        size_t k = (n - i < blok) ? (n - i) : blok;
+        // yari-sifir kontrolu
+        uint32_t sifir = 0;
+        for (size_t j = 0; j < k; j++) if (!v[i + j]) sifir++;
+        if (sifir > k / 2) { ent.push_back(-1.0); continue; }   // yok sayilan blok
+        double h = shannon_entropi(&v[i], k);
+        ent.push_back(h);
+        top += h;
+        say++;
+    }
+    if (cikti) *cikti = ent;
+    if (ortalama) *ortalama = say ? top / say : 0.0;
 }
 
 // ---------- nibble-joker desen eslestirici (PEiD/DIE format) ----------
@@ -420,6 +524,42 @@ EvrenTarama tara(const std::vector<uint8_t>& pe_veri,
         }
     }
 
+    // --- S1b (v8): BOLUM ATLASI — bolumdb (hexacorn 92 + PE-LiteScan + Manalyze +
+    //     packpeek); aile karari DEGIL, guclu destek kaniti + sahte-obfus isareti
+    {
+        int atlas_vurus = 0;
+        std::string en_iyi_atlas;
+        for (auto* b : eslesme_listesi) {
+            bool tabloda = false;      // bu ad GERCEK aile kaniti olarak atlasta var mi?
+            for (auto& kayit : bolumdb::TABLO) {
+                if (!dizgi_esit_mi_kucuk(b->ad, kayit.ad)) continue;
+                char tampon[288];
+                snprintf(tampon, sizeof tampon, "bolum atlasi: '%s' -> %s (%s)",
+                         b->ad.c_str(), kayit.aile, kayit.not_);
+                e.bolum_atlasi.push_back(tampon);
+                e.kanitlar.push_back({std::string("bolum adi '") + b->ad + "' — " + kayit.aile +
+                                      " (K3: bolum atlasi: " + kayit.not_ + ")", 2});
+                if (en_iyi_atlas.empty()) en_iyi_atlas = kayit.aile;
+                atlas_vurus++;
+                tabloda = true;
+                break;
+            }
+            // obfus.h SAHTE bolum adi tablosu (ObfusFake-Remover): yalniz ATLASTA
+            // OLMAYAN adlar sahte adayidir (.vmp0/.enigma1/UPX0 gibi adlar hem gercek
+            // aile bolumu hem obfus sahtesi olabilir — gercek kanit atlastan gelirse
+            // sahte isaretleme YAPILMAZ; 'logicoma'/'30cm'/'.dsstext' gibi ATLASTA
+            // OLMAYAN adlar obfus fake-protection adayi sayilir)
+            if (!tabloda)
+                for (auto& sahte : bolumdb::SAHTE_TABLO) {
+                    if (!dizgi_esit_mi_kucuk(b->ad, sahte.ad)) continue;
+                    e.sahte_bolumler.push_back(b->ad);
+                    e.kanitlar.push_back({std::string("bolum adi '") + b->ad + "' obfus.h sahte-listesinde (fake-protection adayi)", 1});
+                    break;
+                }
+        }
+        (void)atlas_vurus; (void)en_iyi_atlas;
+    }
+
     // --- S2: sahte imza demeti kurali (v6 korunur)
     if (vuran_sayi >= 2) {
         int sahte_aday = 0;
@@ -490,6 +630,9 @@ EvrenTarama tara(const std::vector<uint8_t>& pe_veri,
                                        (int)strlen(imza.desen), "PEiD"});
         }
         for (auto& imza : diedb::EP_TABLO) {
+            // v8: DIE kosullari — kutuphane importu + minimum boyut (orijinal .sg mantigi)
+            if (imza.kutuphane[0] && !girdi_kutuphane_var(g.ithalat_dll, imza.kutuphane)) continue;
+            if (imza.min_boyut && dosya_boyu <= imza.min_boyut) continue;
             int k = desen_ep_eslestir(&pe_veri[ep_ofset], kalan, imza.desen);
             if (k >= 0)
                 ep_vuruslar.push_back({imza.aile, imza.aile, "", k,
@@ -510,6 +653,26 @@ EvrenTarama tara(const std::vector<uint8_t>& pe_veri,
                 e.ep_adaylar.push_back(std::string(ev.ad) + (ev.surum[0] ? " v" + std::string(ev.surum) : ""));
             }
             sira++;
+        }
+    }
+
+    // --- S4b (v8): MODERN (2025-2026) GERCEK CIKTI EP DESENLERI — Wine hatti
+    //     kaniti: klasik userdb'ler 7.8x Enigma'yi bilmiyordu (BILINMEYEN KORUYUCU)
+    if (ep_ofset && ep_ofset < dosya_boyu) {
+        for (auto& me : algdb::MODERN_EP_TABLO) {
+            if (desen_ep_eslestir(&pe_veri[ep_ofset], dosya_boyu - ep_ofset, me.desen) >= 0) {
+                char t2[256];
+                snprintf(t2, sizeof t2, "MODERN EP imzasi: %s %s @EP (%s)", me.aile, me.surum, me.kaynak);
+                e.kanitlar.push_back({t2, 3});
+                if (e.aile.empty()) {
+                    e.aile = me.aile;
+                    e.kategori = "protector";
+                    e.kanit_seviyesi = "K1";         // gercek ciktidan olculmus
+                    e.tespit_edildi = true;
+                    e.ep_aile = me.aile; e.ep_surum = me.surum; e.ep_tablo = "MODERN(Wine)";
+                    e.ep_kararli = true;
+                }
+            }
         }
     }
 
@@ -644,6 +807,394 @@ EvrenTarama tara(const std::vector<uint8_t>& pe_veri,
         }
     }
 
+    // --- S9 (v8): BINTROPY ENTROPI MOTORU — IEEE 4140989
+    //     esikler: ort >= 6.677 VE en-yuksek >= 7.199 (packing-box/bintropy THRESHOLDS)
+    {
+        e.ent_dosya = shannon_entropi(&pe_veri[0], dosya_boyu);
+        std::vector<double> bloklar;
+        double ort = 0.0;
+        bintropy_bloklar(&pe_veri[0], dosya_boyu, 256, &bloklar, &ort);
+        e.ent_ort = ort;
+        double en_yuksek = 0.0;
+        for (double d : bloklar) if (d > en_yuksek) en_yuksek = d;
+        e.ent_en_yuksek = en_yuksek;
+        e.bintropy_packed = (e.ent_ort >= 6.677 && e.ent_en_yuksek >= 7.199);
+        char tampon[192];
+        snprintf(tampon, sizeof tampon, "bintropy: dosya %.3f | blok-ort %.3f | en-yuksek %.3f %s",
+                 e.ent_dosya, e.ent_ort, e.ent_en_yuksek,
+                 e.bintropy_packed ? "-> PAKETLENMIS (IEEE 4140989)" : "");
+        e.kanitlar.push_back({std::string(tampon), e.bintropy_packed ? 2 : 1});
+        if (e.bintropy_packed)
+            e.yapisal.push_back("bintropy: yuksek blok entropisi (ort>=6.677, en-yuksek>=7.199) — SIkISTIRILMIS/ENKRIPTE icerik");
+        // EP bolumu entropisi (Manalyze esigi > 7.0)
+        if (ep_bolumu && ep_bolumu->rsz && ep_bolumu->ro + (size_t)ep_bolumu->rsz <= dosya_boyu) {
+            e.ent_ep_bolum = shannon_entropi(&pe_veri[ep_bolumu->ro], ep_bolumu->rsz);
+            if (e.ent_ep_bolum > 7.0) {
+                char t2[160];
+                snprintf(t2, sizeof t2, "EP bolumu '%s' entropisi %.3f > 7.0 (Manalyze)", ep_bolumu->ad.c_str(), e.ent_ep_bolum);
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back(std::string("bolum '") + ep_bolumu->ad.c_str() + "' entropisi > 7 — sikistirilmis (Manalyze)");
+            }
+        }
+        // bolum-bazli entropi > 7.0 (Manalyze) — en yuksek 3 bolum raporlanir
+        for (auto* b : tum) {
+            if (!b->rsz || !b->ro || (size_t)b->ro + b->rsz > dosya_boyu) continue;
+            double h = shannon_entropi(&pe_veri[b->ro], b->rsz);
+            if (h > 7.0) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "bolum '%s' entropisi %.3f > 7 (sikistirilmis/kriptolu)", b->ad.c_str(), h);
+                e.kanitlar.push_back({t2, 2});
+                if (e.yapisal.size() < 24)
+                    e.yapisal.push_back(std::string("bolum '") + b->ad.c_str() + "' entropisi > 7 (Manalyze)");
+            }
+        }
+        // kuyruk (overlay) analizi — PE-LiteScan: entropi > 7.5 = STRANGE_OVERLAY
+        {
+            uint32_t son_raw = 0;
+            for (auto& b : bolumler) {
+                uint32_t bitis = b.ro + b.rsz;
+                if (bitis > son_raw && bitis <= dosya_boyu) son_raw = bitis;
+            }
+            if (dosya_boyu > son_raw + 64) {
+                e.kuyruk_boy = (uint32_t)(dosya_boyu - son_raw);
+                e.ent_kuyruk = shannon_entropi(&pe_veri[son_raw], e.kuyruk_boy);
+                char t2[192];
+                snprintf(t2, sizeof t2, "overlay/kuyruk: %u bayt, entropi %.3f%s",
+                         e.kuyruk_boy, e.ent_kuyruk,
+                         e.ent_kuyruk > 7.5 ? " > 7.5 — SIKISTIRILMIS VERI (PE-LiteScan STRANGE_OVERLAY)" : "");
+                e.kanitlar.push_back({t2, e.ent_kuyruk > 7.5 ? 2 : 1});
+                if (e.ent_kuyruk > 7.5)
+                    e.yapisal.push_back("overlay entropisi > 7.5 — kuyrukta sikistirilmis veri (PE-LiteScan)");
+            }
+        }
+    }
+
+    // --- S10 (v8): YAPISAL SEZGISEL MOTOR — 5 aractan birlesik
+    {
+        // (a) EP konumu: null EP (pypackerdetect), EP hicbir bolumde degil,
+        //     EP son bolumde (PE-LiteScan), EP bolumu duzensiz (pypackerdetect
+        //     acceptable/alternative/delphi/driver siniflandirmasi)
+        if (g.giris_rva == 0) {
+            e.yapisal.push_back("giris noktasi NULL (pypackerdetect: 'Null entry point')");
+            e.kanitlar.push_back({"EP RVA=0 — null giris noktasi (pypackerdetect)", 2});
+        } else if (!ep_bolumu) {
+            e.yapisal.push_back("EP hicbir bolume dusmuyor (pypackerdetect: 'EP does not fall in any section')");
+            e.kanitlar.push_back({"EP hicbir bolume dusmuyor — kirilmis/bozuk PE ya da packer (pypackerdetect 'EP does not fall in any section')", 2});
+        } else {
+            // EP hangi bolumde? (ad, son-bolum-mi?)
+            bool ep_son_bolumde = (ep_bolumu == &bolumler.back());
+            if (ep_son_bolumde && bolumler.size() > 1) {
+                char t2[160];
+                snprintf(t2, sizeof t2, "EP son bolumde ('%s') — packer aliskanligi (PE-LiteScan LAST_SECTION_ENTRYPOINT)",
+                         ep_bolumu->ad.c_str());
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back(std::string("EP son bolumde: '") + ep_bolumu->ad.c_str() + "' (PE-LiteScan)");
+            }
+            // pypackerdetect EP-bolum sinifi
+            static const char* const KABUL[] = {".text", ""};
+            static const char* const ALTER[] = {".code", "text", ".text0", ".text1", ".text2", ".text3", ""};
+            static const char* const DELPHI_BSS[] = {".BSS", "BSS", ".bss", ""};
+            static const char* const DELPHI[] = {".itext", "CODE", ""};
+            static const char* const SURUCU[] = {"INIT", ""};
+            bool kabul = false, alter = false, dbss = false, delphi = false, surucu = false, dbss_var = false;
+            for (auto& b : bolumler) for (int i = 0; DELPHI_BSS[i][0]; i++) if (dizgi_esit_mi_kucuk(b.ad, DELPHI_BSS[i])) { dbss_var = true; break; }
+            for (int i = 0; KABUL[i][0]; i++) if (dizgi_esit_mi_kucuk(ep_bolumu->ad, KABUL[i])) { kabul = true; break; }
+            for (int i = 0; ALTER[i][0]; i++) if (dizgi_esit_mi_kucuk(ep_bolumu->ad, ALTER[i])) { alter = true; break; }
+            for (int i = 0; DELPHI[i][0]; i++) if (dizgi_esit_mi_kucuk(ep_bolumu->ad, DELPHI[i])) { delphi = true; break; }
+            for (int i = 0; SURUCU[i][0]; i++) if (dizgi_esit_mi_kucuk(ep_bolumu->ad, SURUCU[i])) { surucu = true; break; }
+            bool duzensiz = false;
+            if (kabul) duzensiz = false;
+            else if (dbss_var && delphi) duzensiz = false;      // Delphi BSS -> .itext/CODE EP
+            else if (alter) duzensiz = false;
+            else if (surucu) duzensiz = false;                  // surucu INIT bolumu
+            else duzensiz = true;
+            if (duzensiz) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "EP bolumu '%s' duzensiz — kabul/alter/Delphi/surucu disi (pypackerdetect 'irregular EP section')",
+                         ep_bolumu->ad.c_str());
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back(std::string("EP bolumu duzensiz: '") + ep_bolumu->ad.c_str() + "' (pypackerdetect)");
+            }
+            // EP ilk bayt stub taramasi (packerscope EntryPointDetector + PE-LiteScan PUSHAD)
+            if (ep_ofset && ep_ofset < dosya_boyu) {
+                for (auto& st : algdb::EP_STUB) {
+                    if (desen_ep_eslestir(&pe_veri[ep_ofset], dosya_boyu - ep_ofset, st.desen) >= 0) {
+                        char t2[192];
+                        snprintf(t2, sizeof t2, "EP stub %s @EP: %s (packerscope/PE-LiteScan)", st.kod, st.aciklama);
+                        e.kanitlar.push_back({t2, 2});
+                        e.yapisal.push_back(std::string("EP stub: ") + st.kod + " (" + st.aciklama + ")");
+                        break;   // yalniz en spesifik ilk vurus
+                    }
+                }
+            }
+        }
+        // (b) .text yoklugu (PE-LiteScan NO_TEXT_SECTION) — Delphi (CODE) ve .NET muaf
+        {
+            bool text_var = false;
+            for (auto& b : bolumler) if (dizgi_esit_mi_kucuk(b.ad, ".text")) { text_var = true; break; }
+            bool delphi = false;
+            for (auto& b : bolumler) {
+                if (dizgi_esit_mi_kucuk(b.ad, "CODE") || dizgi_esit_mi_kucuk(b.ad, ".itext")) { delphi = true; break; }
+            }
+            if (!text_var && !delphi && !nc.gecerli) {
+                e.yapisal.push_back(".text bolumu yok (PE-LiteScan NO_TEXT_SECTION)");
+                e.kanitlar.push_back({".text bolumu yok — packer/yabanci uretici (PE-LiteScan)", 2});
+            }
+        }
+        // (c) ithalat analizi (pypackerdetect 'Too few imports' + Manalyze < 10;
+        //     .NET mscoree muafiyeti her ikisinde de)
+        e.ithalat_sayisi = (int)g.ithalat_toplam;
+        if (!g.net_mscoree && g.ithalat_toplam < 10) {
+            char t2[160];
+            snprintf(t2, sizeof t2, "ithalat sayisi %u < 10 — packer aliskanligi (pypackerdetect/Manalyze 'low imports')",
+                     (unsigned)g.ithalat_toplam);
+            e.kanitlar.push_back({t2, 2});
+            e.yapisal.push_back(std::string("ithalat < 10: ") + std::to_string(g.ithalat_toplam) + " (pypackerdetect/Manalyze)");
+        }
+        // (d) ithalat tablosu tamamen yoksa (PE-LiteScan IMPORT_TABLE_MISSING)
+        if (g.ithalat_toplam == 0 && !nc.gecerli) {
+            e.yapisal.push_back("ithalat tablosu yok (PE-LiteScan IMPORT_TABLE_MISSING)");
+            e.kanitlar.push_back({"ithalat tablosu hic yok — bozuk/agresif packer (PE-LiteScan)", 2});
+        }
+        // (e) dinamik-yukleme IAT'i (packerscope IATDetector): yalniz
+        //     LoadLibrary/GetProcAddress/VirtualAlloc kumesi
+        if (!g.ithalat_fonksiyonlar.empty()) {
+            int dinamik = 0, toplam_fn = 0;
+            static const char* const DYNA[] = {"LoadLibraryA","LoadLibraryW","LoadLibraryExA","LoadLibraryExW",
+                "GetProcAddress","GetModuleHandleA","GetModuleHandleW","VirtualAlloc","VirtualAllocEx",
+                "VirtualProtect","VirtualProtectEx","NtProtectVirtualMemory","NtAllocateVirtualMemory",
+                "IsDebuggerPresent","CheckRemoteDebuggerPresent","NtQueryInformationProcess",
+                "RtlDecompressBuffer","WriteProcessMemory","CreateRemoteThread", ""};
+            for (auto& f : g.ithalat_fonksiyonlar) {
+                size_t un = f.find('!');
+                if (un == std::string::npos) continue;
+                std::string fn = f.substr(un + 1);
+                toplam_fn++;
+                for (int i = 0; DYNA[i][0]; i++)
+                    if (fn == DYNA[i]) { dinamik++; break; }
+            }
+            if (toplam_fn >= 4 && dinamik * 100 >= toplam_fn * 80) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "IAT neredeyse yalniz dinamik-yukleme API'leri (%d/%d) — packer stub (packerscope IATDetector)",
+                         dinamik, toplam_fn);
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back("IAT yalniz LoadLibrary/GetProcAddress turu — packer stub (packerscope)");
+            }
+        }
+        // (f) WX/RWX bolumler (Manalyze 'writable and executable' + ObfusHunter RWX)
+        for (auto* b : tum) {
+            const uint32_t X = 0x20000000, W = 0x80000000, R = 0x40000000;
+            if ((b->oz & X) && (b->oz & W)) {
+                char t2[160];
+                snprintf(t2, sizeof t2, "bolum '%s' yazilabilir+calistirilabilir (W%X) — Manalyze/ObfusHunter",
+                         b->ad.c_str(), (b->oz & R) ? 3 : 2);
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back(std::string("WX bolum: '") + b->ad.c_str() + "' (Manalyze)");
+            }
+        }
+        // (g) kaynaklar dosyadan buyuk (Manalyze 'resources bigger than file')
+        if (g.kaynak_boy && g.kaynak_boy > dosya_boyu) {
+            char t2[160];
+            snprintf(t2, sizeof t2, "kaynak toplami %u > dosya %zu — Manalyze", g.kaynak_boy, dosya_boyu);
+            e.kanitlar.push_back({t2, 2});
+            e.yapisal.push_back("kaynaklar dosyadan buyuk (Manalyze)");
+        }
+        // (h) VirtualSize >> SizeOfRawData (packer izi: bosaltma alani)
+        for (auto* b : tum) {
+            if (b->vsz && b->rsz && b->vsz > b->rsz * 4 + 0x1000 && b->vsz > 0x10000) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "bolum '%s' VirtualSize 0x%X >> Raw 0x%X — packer bosaltma alani",
+                         b->ad.c_str(), b->vsz, b->rsz);
+                e.kanitlar.push_back({t2, 2});
+                e.yapisal.push_back(std::string("bolum '") + b->ad.c_str() + "' vsz>>raw (packer bosaltma alani)");
+            }
+        }
+        // (i) garip bolum adlari (PE-LiteScan WEIRD: ozel karakterler)
+        for (auto* b : tum) {
+            for (char c : b->ad) {
+                if (c && (strchr("=+~!@#$%^&*()%:;\\|'`<> ", c) || (unsigned char)c < 0x20)) {
+                    e.yapisal.push_back(std::string("garip bolum adi: '") + b->ad.c_str() + "' (PE-LiteScan WEIRD)");
+                    e.kanitlar.push_back({std::string("bolum adi '") + b->ad.c_str() + "' garip karakter tasiyor (PE-LiteScan)", 1});
+                    break;
+                }
+            }
+        }
+        // (i2) v8: BOS bolum adlari — gercek Enigma 7.8x ciktisi 7 bolumden 6-7'sini
+        //      bosa birakir (Wine hatti kaniti); meşru PE'ler bolumlerini adlandirir
+        {
+            int bos_ad = 0;
+            for (auto& b : bolumler)
+                if (b.ad.empty() || b.ad.find_first_not_of('\0') == std::string::npos ||
+                    b.ad.find_first_not_of(" \t") == std::string::npos) bos_ad++;
+            if (bos_ad >= 5) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "%d/%zu bolum adi BOS — modern Enigma 7.x / anti-analiz deseni (v8 Wine hatti)",
+                         bos_ad, bolumler.size());
+                e.yapisal.push_back(t2);
+                e.kanitlar.push_back({t2, 2});
+            }
+        }
+        // (j) ozel DOS stub (PE-LiteScan CUSTOM_DOS_STUB) — 4 standart dizgi disinda
+        {
+            if (dosya_boyu > 350 && g.e_lfanew >= 0x40 && g.e_lfanew <= 0x400) {
+                static const char* const STUBLAR[] = {
+                    "This program cannot be run in DOS mode.",
+                    "This program must be run under Win32",
+                    "This program must be run under Win64",
+                    "This program requires Win32", ""};
+                bool standart = false;
+                for (int i = 0; STUBLAR[i][0]; i++)
+                    if (bayt_icinde(pe_veri, 0x40, std::min<size_t>(0x200, dosya_boyu), STUBLAR[i])) { standart = true; break; }
+                if (!standart) {
+                    e.yapisal.push_back("standart-disi DOS stub (PE-LiteScan CUSTOM_DOS_STUB)");
+                    e.kanitlar.push_back({"DOS stub standart degil — ozel uretici/packer (PE-LiteScan)", 1});
+                }
+            }
+        }
+        // (k) RICH header checksum dogrulamasi (Manalyze rich_header_tests)
+        {
+            uint32_t tarama_son = g.e_lfanew ? std::min<uint32_t>(g.e_lfanew, (uint32_t)dosya_boyu)
+                                             : std::min<uint32_t>(0x400, (uint32_t)dosya_boyu);
+            for (uint32_t i = 0; i + 8 <= tarama_son; i += 4) {
+                uint32_t sozcuk = 0;
+                memcpy(&sozcuk, &pe_veri[i], 4);
+                if (sozcuk != 0x68636952) continue;          // "Rich"
+                uint32_t xor_anahtari = 0;
+                memcpy(&xor_anahtari, &pe_veri[i + 4], 4);
+                // geriye dogru 8-bayt adimlarla DanS ara
+                std::vector<std::tuple<uint16_t, uint16_t, uint32_t>> degerler;
+                uint32_t dans_ofset = 0;
+                uint32_t imlec = i;
+                while (imlec >= 8) {
+                    imlec -= 8;
+                    uint64_t kodlanmis = 0;
+                    memcpy(&kodlanmis, &pe_veri[imlec], 8);
+                    uint32_t sayim = (uint32_t)(kodlanmis >> 32) ^ xor_anahtari;
+                    uint32_t kimlik = (uint32_t)kodlanmis ^ xor_anahtari;
+                    if (kimlik == 0x536E6144) { dans_ofset = imlec; goto dans_bulundu; }
+                    degerler.push_back({(uint16_t)(kimlik >> 16), (uint16_t)kimlik, sayim});
+                    if (degerler.size() > 64) break;
+                }
+                break;   // Rich bulundu ama DanS yok — gecersiz, kontrol bitir
+            dans_bulundu:
+                if (dans_ofset) {
+                    // checksum = DanS_ofset + DOS-stub rol32 toplami (e_lfanew istisnasi) + comp.id'ler
+                    uint32_t checksum = dans_ofset;
+                    for (uint32_t k = 0; k < dans_ofset; k++) {
+                        if (k >= 0x3c && k < 0x40) continue;   // e_lfanew
+                        checksum += rol32_v8(pe_veri[k], k);
+                    }
+                    for (auto& d : degerler)
+                        checksum += rol32_v8(((uint32_t)std::get<0>(d) << 16) | (uint32_t)std::get<1>(d),
+                                             std::get<2>(d));
+                    if (checksum != xor_anahtari) {
+                        e.rich_header_gecersiz = true;
+                        e.yapisal.push_back("RICH header checksum GECERSIZ — baslik ile oynanmis (Manalyze MALICIOUS)");
+                        e.kanitlar.push_back({"RICH checksum uyusmuyor — DOS stub elle degistirilmis/packer (Manalyze: 'The file headers were tampered with')", 3});
+                    }
+                    // @comp.id 'Total imports' tutarliligi (Manalyze) — prodid==1
+                    for (auto& d : degerler) {
+                        if (std::get<0>(d) == 1 && !e.rich_header_gecersiz) {
+                            if (std::get<2>(d) < (uint32_t)g.ithalat_toplam) {
+                                e.yapisal.push_back("RICH @comp.id ithalat sayisi uyumsuz (Manalyze 'inconsistent imports')");
+                                e.kanitlar.push_back({"RICH basligin bildirdigi ithalat sayisi gercekten az — packer (Manalyze)", 2});
+                            }
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        // (l) .NET SuppressIldasmAttribute (PE-LiteScan NET_ANTI_ILDASM)
+        if (nc.gecerli) {
+            if (bayt_icinde(pe_veri, nc.meta_kok,
+                            std::min<size_t>((size_t)nc.meta_boy, dosya_boyu - nc.meta_kok),
+                            "SuppressIldasmAttribute")) {
+                e.yapisal.push_back(".NET SuppressIldasmAttribute (PE-LiteScan NET_ANTI_ILDASM)");
+                e.kanitlar.push_back({"SuppressIldasmAttribute — ILDASM engelleme (PE-LiteScan)", 2});
+            }
+        }
+    }
+
+    // --- S11 (v8): OBFUS.H DERIN BLOGU — ObfusHunter + ObfusFake
+    {
+        int obfus_vurus = 0;
+        for (auto* b : tum) {
+            if (!b->rsz || !b->ro || (size_t)b->ro + b->rsz > dosya_boyu) continue;
+            for (auto& des : algdb::OBFUS_TABLO) {
+                // bolum icinde ara (ilk 256KB) — obfus desenleri bolum baslarina yiginlasir
+                size_t sinir = std::min<size_t>((size_t)b->rsz, 0x40000);
+                for (size_t i = 0; i + strlen(des.desen) / 2 <= sinir; i++) {
+                    if (desen_ep_eslestir(&pe_veri[b->ro + i], dosya_boyu - b->ro - i, des.desen) >= 0) {
+                        char t2[224];
+                        snprintf(t2, sizeof t2, "obfus.h deseni %s @'%s'+0x%zX (%s)",
+                                 des.kod, b->ad.c_str(), i, des.kategori);
+                        e.obfus_bulgular.push_back(t2);
+                        e.kanitlar.push_back({std::string("obfus deseni: ") + des.kod + " (" + des.kategori + ") — ObfusHunter", 2});
+                        obfus_vurus++;
+                        break;
+                    }
+                }
+            }
+        }
+        // sahte imza desenleri (ObfusFake): bunlar obfus.h fake-protection modunun
+        // gomdugu SAHTE filigranlardir — gercek aile adi DEGIL, sahtecilik kanitidir
+        for (auto& sa : algdb::SAHTE_TABLO) {
+            size_t n = strlen(sa.desen) / 2;
+            if (dosya_boyu < n) continue;
+            std::vector<uint8_t> desen_bayt(n);
+            for (size_t k = 0; k < n; k++) {
+                char h = sa.desen[k * 2], l = sa.desen[k * 2 + 1];
+                desen_bayt[k] = (uint8_t)((h <= '9' ? h - '0' : (h | 32) - 'a' + 10) << 4 |
+                                          (l <= '9' ? l - '0' : (l | 32) - 'a' + 10));
+            }
+            for (size_t i = 0; i + n <= dosya_boyu; i++) {
+                if (memcmp(&pe_veri[i], &desen_bayt[0], n) == 0) {
+                    e.obfus_sahte_imza = true;
+                    e.kanitlar.push_back({std::string("SAHTE imza filigrani: \"") + sa.aciklama + "\" (ObfusFake-Remover: obfus.h fake-protection)", 2});
+                    break;
+                }
+            }
+        }
+        // sahte dongle dizgileri (ObfusFake: skeydrv/HASPDOSDRV/WIBUKEY...)
+        for (auto& d : algdb::SAHTE_DONGLE) {
+            if (bayt_icinde(pe_veri, 0, dosya_boyu, d.dizgi)) {
+                e.obfus_sahte_dongle = true;
+                e.kanitlar.push_back({std::string("sahte dongle izi: \"") + d.dizgi + "\" (ObfusFake: obfus.h fake-protection Sentinel/HASP/WIBU taklidi)", 2});
+                break;
+            }
+        }
+        // obfus.h karar: desen vuruslari + sahte bolum adi kombinasyonu
+        // v8 duzeltme: S5 bolum-icerik imzasi (ep_aile) ZATEN bir aile bulmussa,
+        // obfus heuristiği ONA DEGILIR — imza > heuristik (ACProtect compress2 vakasi:
+        // ACProtect junk-code kullandigi icin obfus desenleri yasiyordu)
+        if (obfus_vurus >= 3 && !e.aile.empty() && e.aile.rfind("obfus", 0) != 0) {
+            // baska aile adayi var ama obfus desenleri yogun — katman bilgisi
+            e.kanitlar.push_back({"obfus.h desenleri yogun (" + std::to_string(obfus_vurus) + ") — obfusheader.h katmani olabilir", 1});
+        }
+        if (obfus_vurus >= 3 && e.aile.empty() && e.ep_aile.empty()) {
+            e.aile = "obfus.h / obfusheader.h";
+            e.kategori = "obfuscator";
+            e.kanit_seviyesi = "K2";
+            e.tespit_edildi = true;
+            e.kanitlar.push_back({std::to_string(obfus_vurus) + " obfus.h deseni (junk/anti-debug/VM dispatch) — ObfusHunter", 3});
+        }
+    }
+
+    // --- S12 (v8): OYUN DRM / TICARI PROTECTOR DIZGILERI (DRMDetector)
+    {
+        for (auto& d : algdb::DRM_TABLO) {
+            if (bayt_icinde(pe_veri, 0, dosya_boyu, d.dizgi)) {
+                char t2[192];
+                snprintf(t2, sizeof t2, "DRM/protector izi: \"%s\" — %s (DRMDetector)", d.dizgi, d.aile);
+                e.drm_bulgular.push_back(t2);
+                // kanit olarak ekle; aile karari yalniz BOŞSA ve guclu ise
+                e.kanitlar.push_back({std::string("dizgi izi: \"") + d.dizgi + "\" — " + d.aile + " (DRMDetector)", 2});
+            }
+        }
+    }
+
     // --- S8: NIHAI AILE KARARI
     // oncelik: bolum-ailesi (v6 guvenilir) > .NET > EP (>=6 kesin bayt) > dizgi
 
@@ -683,6 +1234,18 @@ EvrenTarama tara(const std::vector<uint8_t>& pe_veri,
                    en.kesin >= 12 && std::string(en.aile) != e.aile) {
             e.kanitlar.push_back({std::string("katman suphesi: EP ") + en.aile + " + bolum/yapi " + e.aile, 1});
         }
+    }
+
+    // v8: S5 bolum-icerik imzasi (PEiD ep_only=false) veya S4b MODERN tablo bir
+    // aile bulmussa ve hâlâ aile karari yoksa — o imza aile olur (ACProtect 1.4x
+    // .perplex icinde bulundu; obfus heuristigi ezdi — bu duzeltme onu geri alir)
+    if (e.aile.empty() && !e.ep_aile.empty()) {
+        e.aile = e.ep_aile;
+        if (!e.ep_surum.empty()) e.aile += " " + e.ep_surum;
+        e.kategori = "packer/protector (bolum-icerik imzasi)";
+        e.kanit_seviyesi = "K3";
+        e.tespit_edildi = true;
+        e.kanitlar.push_back({"aile karari: bolum-icerik imzasi " + e.ep_aile + " [" + e.ep_tablo + "]", 3});
     }
 
     // dizgi ailesi (v6 mantigi) + v7 sakli dizgi vuruslari
